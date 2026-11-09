@@ -1,0 +1,13 @@
+{
+ "type": "ConsumeGenerator", "category": "power", "size": 3, "health": 900,
+ "research": "vg-heat-engine",
+ "requirements": ["copper/120", "lead/100", "silicon/60", "steel/60", "aluminum/40"],
+ "powerProduction": 7, "warmupSpeed": 0.02, "liquidCapacity": 30,
+ "effectChance": 0.04, "generateEffect": "generatespark",
+ "consumes": {"liquid": {"liquid": "oil", "amount": 0.12}},
+ "ambientSound": "hydrocarbon-loop", "ambientSoundVolume": 0.1,
+ "drawer": {"type": "DrawMulti", "drawers": [
+  {"type": "DrawDefault"},
+  {"type": "DrawGlowRegion", "color": "ff9a3a", "alpha": 0.9, "glowScale": 5, "glowIntensity": 0.35}
+ ]}
+}

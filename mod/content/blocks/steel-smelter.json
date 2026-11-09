@@ -1,41 +1,47 @@
 {
- "type": "GenericCrafter",
- "category": "crafting",
- "size": 2,
- "health": 360,
- "research": "mass-separator",
- "requirements": [
-  "copper/80",
-  "lead/40",
-  "graphite/40"
- ],
- "outputItem": "steel/1",
- "craftTime": 60,
- "craftEffect": "smeltsmoke",
- "consumes": {
-  "items": {
-   "items": [
-    "ferrolite/2",
-    "coal/1"
-   ]
+  "type": "GenericCrafter",
+  "category": "crafting",
+  "size": 2,
+  "health": 360,
+  "research": "mass-separator",
+  "requirements": [
+    "copper/80",
+    "lead/40",
+    "graphite/40"
+  ],
+  "outputItem": "steel/1",
+  "craftTime": 60,
+  "craftEffect": "smeltsmoke",
+  "consumes": {
+    "items": {
+      "items": [
+        "ferrolite/2",
+        "coal/1"
+      ]
+    },
+    "power": 0.6
   },
-  "power": 0.6
- },
- "ambientSound": "smelter-loop",
- "ambientSoundVolume": 0.12,
- "drawer": {
-  "type": "DrawMulti",
-  "drawers": [
-   {
-    "type": "DrawDefault"
-   },
-   {
-    "type": "DrawGlowRegion",
-    "color": "ff7a1e",
-    "alpha": 0.9,
-    "glowScale": 6,
-    "glowIntensity": 0.35
-   }
-  ]
- }
+  "ambientSound": "smelter-loop",
+  "ambientSoundVolume": 0.12,
+  "drawer": {
+    "type": "DrawMulti",
+    "drawers": [
+      {
+        "type": "DrawDefault"
+      },
+      {
+        "type": "DrawGlowRegion",
+        "color": "ff7a1e",
+        "alpha": 0.9,
+        "glowScale": 6,
+        "glowIntensity": 0.35
+      }
+    ]
+  },
+  "outputLiquid": {
+    "liquid": "molten-iron",
+    "amount": 0.04
+  },
+  "liquidCapacity": 20,
+  "ignoreLiquidFullness": true
 }

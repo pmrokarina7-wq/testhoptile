@@ -1,0 +1,8 @@
+{
+ "type": "MassDriver", "category": "distribution", "size": 4, "health": 2400, "armor": 8,
+ "research": "mass-driver",
+ "requirements": ["silicon/220", "titanium/160", "thorium/90", "steel/120", "cobalt-alloy/80", "superconductor/40"],
+ "range": 960, "reload": 160, "itemCapacity": 240, "minDistribute": 20, "knockback": 5, "rotateSpeed": 4, "shake": 4,
+ "shootSound": "driver-shoot",
+ "consumes": {"power": 4}
+}

@@ -1,22 +1,29 @@
 {
- "type": "MendProjector",
- "category": "effect",
- "size": 2,
- "health": 520,
- "research": "mender",
- "requirements": [
-  "lead/90",
-  "silicon/70",
-  "titanium/40",
-  "aluminum/40"
- ],
- "reload": 200,
- "range": 90,
- "healPercent": 14,
- "baseColor": "84f491",
- "consumes": {
-  "power": 1.5
- },
- "ambientSound": "nanite-loop",
- "ambientSoundVolume": 0.05
+  "type": "MendProjector",
+  "category": "effect",
+  "size": 2,
+  "health": 520,
+  "research": "mender",
+  "requirements": [
+    "lead/90",
+    "silicon/70",
+    "titanium/40",
+    "aluminum/40"
+  ],
+  "reload": 200,
+  "range": 90,
+  "healPercent": 14,
+  "baseColor": "84f491",
+  "consumes": {
+    "power": 1.5,
+    "liquid": {
+      "liquid": "nanite-slurry",
+      "amount": 0.03,
+      "boost": true
+    }
+  },
+  "ambientSound": "nanite-loop",
+  "ambientSoundVolume": 0.05,
+  "phaseBoost": 8,
+  "phaseRangeBoost": 40
 }

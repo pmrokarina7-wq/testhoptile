@@ -1,0 +1,9 @@
+{
+ "type": "BeamDrill", "category": "production", "size": 3, "health": 900,
+ "research": "vg-percussion-drill",
+ "requirements": ["copper/120", "lead/90", "silicon/80", "titanium/60", "magnet/40"],
+ "tier": 5, "range": 6, "drillTime": 180, "laserWidth": 0.6, "itemCapacity": 20,
+ "sparkColor": "ff3355", "glowColor": "ff7486",
+ "consumes": {"power": 3, "liquid": {"liquid": "water", "amount": 0.06, "boost": true}},
+ "optionalBoostIntensity": 1.8, "ambientSound": "drill-loop", "ambientSoundVolume": 0.08
+}
