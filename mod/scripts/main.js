@@ -227,6 +227,45 @@ try{
     noBuild.effect = Fx.none;
 }catch(e){ noBuild = null; Log.err("[vg] no-build status disabled: " + e); }
 
+// ACU modules (2.5.0-beta2): two of six at a time, bought at an own core (12 tiles) with core items.
+// Each module is a hidden permanent status, so it is synced to clients and saved with the unit for free; the slot
+// count reads getDuration() (exact within a frame, unlike hasEffect which updates with the unit). Periodic effects
+// (shield, repair, missiles) run in the "acuMods" handler below; cannon and build are plain status multipliers.
+var MOD_DEFS = [
+    { id: "cannon", cost: [["graphite", 400], ["vg-steel", 250], ["silicon", 150]], set: { damageMultiplier: 1.35 } },
+    { id: "shield", cost: [["silicon", 350], ["titanium", 200], ["vg-aluminum", 100]] },
+    { id: "build", cost: [["silicon", 300], ["vg-steel", 200], ["lead", 300]], set: { buildSpeedMultiplier: 1.75 } },
+    { id: "repair", cost: [["silicon", 300], ["vg-aluminum", 150], ["graphite", 200]] },
+    { id: "missiles", cost: [["graphite", 300], ["vg-charge", 250], ["titanium", 150]] },
+    { id: "teleport", cost: [["silicon", 500], ["vg-cobalt-alloy", 150], ["titanium", 250]] }
+];
+var MOD = {}, MOD_SLOTS = 2, MOD_FOREVER = 1e9, MOD_CORE_RANGE = 12 * 8, TP_COOLDOWN = 7200;
+var tpCool = null, assembly = null;
+try{
+    MOD_DEFS.forEach(function(d){
+        var st = new StatusEffect("acu-mod-" + d.id);
+        st.permanent = true;
+        st.show = false;
+        st.effect = Fx.none;
+        if(d.set) for(var k in d.set) st[k] = d.set[k];
+        d.st = st;
+        MOD[d.id] = d;
+    });
+    tpCool = new StatusEffect("acu-tp-cooldown");
+    tpCool.color = Color.valueOf("8fb8ff");
+    tpCool.effect = Fx.none;
+    // respawn in the core after an ACU loss: the new ACU stands assembled in the core for the rest of the 30 s ban
+    // (vanilla respawn delay is a final constant, so the wait is a status: synced, saved, shown with a timer)
+    assembly = new StatusEffect("acu-assembly");
+    assembly.speedMultiplier = 0;
+    assembly.reloadMultiplier = 0;
+    assembly.buildSpeedMultiplier = 0;
+    assembly.healthMultiplier = 10;
+    assembly.disarm = true;
+    assembly.color = Color.valueOf("ffd37f");
+    assembly.effect = Fx.none;
+}catch(e){ MOD_DEFS = []; MOD = {}; Log.err("[vg] ACU modules disabled: " + e); }
+
 // engineers start in "assist" mode: they follow and help any construction nearby
 Events.on(ContentInitEvent, function(){
     try{
@@ -307,12 +346,23 @@ Events.on(UnitDestroyEvent, function(ev){
         if(m === undefined) return;
         if(!Vars.headless) Effect.shake(5 + 2 * m.mk, 70, u.x, u.y);
         if(!Vars.net.client()) Damage.damage(u.team, u.x, u.y, m.r, m.dmg);
-        if(SET.supcom){ banUntil[u.team.id] = Time.time + BAN_TICKS; ruleTick = 0; }
+        if(SET.supcom){
+            banUntil[u.team.id] = Time.time + BAN_TICKS; ruleTick = 0;
+            // ACUs alive at the moment of the loss keep fighting; only ACUs the core spawns afterwards are assembled
+            var known = {}, tm = u.team;
+            Groups.unit.each(function(o){ if(o != u && o.team == tm && ACU[o.type.name]) known[o.id] = true; });
+            banKnown[tm.id] = known;
+        }
+        // "Veteran" setting: losing the ACU you pilot loses the game (PvP: the team's cores fall)
+        if(!Vars.net.client() && setting("vg-acu-defeat", false) && u.isPlayer()){
+            if(Vars.state.rules.pvp) u.team.cores().copy().each(function(c){ c.kill(); });
+            else Call.gameOver(Vars.state.rules.waveTeam);
+        }
     }catch(e){ Log.err("[vg] ACU death blast: " + e); }
 });
 
 // core upgrade (Command Center / Citadel core placed over a smaller BKM core): players piloting a lower-mark ACU
-// spawned by a core get the new mark in place, keeping their health fraction (vanilla only changes it on respawn)
+// spawned by a core get the new mark in place, keeping their health fraction, modules and timers
 Events.on(BlockBuildEndEvent, function(ev){
     try{
         if(ev.breaking || Vars.net.client() || ev.tile == null) return;
@@ -328,6 +378,12 @@ Events.on(BlockBuildEndEvent, function(ev){
             nu.rotation = old.rotation;
             nu.spawnedByCore = true;
             nu.health = nu.maxHealth * Math.max(0.1, old.healthf());
+            [tpCool, assembly].concat(MOD_DEFS.map(function(d){ return d.st; })).forEach(function(st){
+                var d = (st == null) ? 0 : old.getDuration(st);
+                if(d > 0) nu.apply(st, d);
+            });
+            var kn = banKnown[ev.team.id];
+            if(kn !== undefined) kn[nu.id] = true;
             nu.add();
             p.unit(nu);
             old.remove();
@@ -336,17 +392,192 @@ Events.on(BlockBuildEndEvent, function(ev){
     }catch(e){ Log.err("[vg] ACU upgrade: " + e); }
 });
 
-// heavy mech footsteps: sound + light shake when a foot lands (ACU list refreshed every 30 frames)
-var failD = false, steps = {}, stepClean = 0, acuList = [], acuTick = 0;
+// ---------------- ACU modules, teleport and respawn assembly (2.5.0-beta2)
+//  * gameplay (install, shield regen, repair, missiles, teleport, assembly) runs on the server/host; clients send
+//    requests as "vg-acu" packets ("add <id>", "del <id>", "tp") and draw from the synced statuses
+//  * one ACU list for every ACU handler, refreshed every 30 ticks
+var banKnown = {}, acuList = [], acuTick = 0, modT = {}, modFail = false, missileT = null, HEAL_COL = Color.valueOf("98ffa9");
+Events.on(WorldLoadEvent, function(){ banKnown = {}; acuList = []; acuTick = 0; modT = {}; });
+function hasSt(u, st){ return st != null && u.getDuration(st) > 0; }
+function modsOf(u){ var o = []; for(var i = 0; i < MOD_DEFS.length; i++) if(hasSt(u, MOD_DEFS[i].st)) o.push(MOD_DEFS[i]); return o; }
+function isAcu(u){ return u != null && u.isValid() && ACU_MK[u.type.name] !== undefined; }
+function freeFor(team){ return Vars.state.rules.infiniteResources || team.rules().infiniteResources || team.rules().cheat; }
+function nearCore(u){ var c = u.closestCore(); return (c != null && u.within(c, MOD_CORE_RANGE + c.block.size * 4)) ? c : null; }
+function costOf(d){
+    if(d.items == null){
+        d.items = [];
+        d.cost.forEach(function(c){ var it = Vars.content.item(c[0]); if(it != null) d.items.push({ item: it, n: c[1] }); });
+    }
+    return d.items;
+}
+function canPay(core, d){ var it = costOf(d); for(var i = 0; i < it.length; i++) if(!core.items.has(it[i].item, it[i].n)) return false; return true; }
+function setShield(u, v){ if(typeof u.shield === "function") u.shield(v); else u.shield = v; }
+function fxAt(fx, x, y, rot, col){ if(!Vars.headless) fx.at(x, y, rot, col); }
+
+// returns null on success, otherwise the bundle key of the reason (shown to the local player)
+function modAction(p, msg){
+    var u = (p == null) ? null : p.unit();
+    if(!isAcu(u)) return "vg.mod.noacu";
+    var a = String(msg).split(" "), op = a[0];
+    if(op == "tp") return teleport(u, p);
+    var d = MOD[a[1]];
+    if(d === undefined) return "vg.mod.noacu";
+    if(op == "del"){ u.unapply(d.st); return null; }
+    if(op != "add" || hasSt(u, d.st)) return null;
+    if(modsOf(u).length >= MOD_SLOTS) return "vg.mod.full";
+    var core = nearCore(u);
+    if(core == null) return "vg.mod.nocore";
+    if(!freeFor(u.team)){
+        if(!canPay(core, d)) return "vg.mod.noitems";
+        costOf(d).forEach(function(c){ core.items.remove(c.item, c.n); });
+    }
+    u.apply(d.st, MOD_FOREVER);
+    fxAt(Fx.upgradeCoreBloom, u.x, u.y, u.hitSize / 8, u.team.color);
+    var ms = S("acu-module"); if(ms != null && !Vars.headless) ms.at(u.x, u.y, 1);
+    return null;
+}
+function teleport(u, p){
+    if(!hasSt(u, MOD.teleport.st)) return "vg.mod.noacu";
+    if(hasSt(u, tpCool) || hasSt(u, assembly)) return "vg.tp.cooldown";
+    var c = u.closestCore();
+    if(c == null) return "vg.mod.nocore";
+    fxAt(Fx.teleportOut, u.x, u.y, 0, u.team.color);
+    u.set(c.x, c.y);
+    u.vel.setZero();
+    try{ u.snapInterpolation(); }catch(e){}
+    if(p != null){
+        p.set(c.x, c.y);
+        // remote players own their unit's position, so the server moves it on their side too
+        if(Vars.net.server() && p.con != null) Call.setPosition(p.con, c.x, c.y);
+    }
+    u.apply(tpCool, TP_COOLDOWN);
+    fxAt(Fx.teleportActivate, c.x, c.y, 0, u.team.color);
+    var s = S("acu-teleport"); if(s != null && !Vars.headless) s.at(c.x, c.y, 1);
+    return null;
+}
+
+var pktReg = false;
+function regPackets(){
+    if(pktReg || Vars.netServer == null) return;
+    pktReg = true;
+    Vars.netServer.addPacketHandler("vg-acu", function(p, msg){
+        try{ modAction(p, msg); }catch(e){ Log.err("[vg] ACU module request: " + e); }
+    });
+}
+Events.on(WorldLoadEvent, regPackets);
+function request(msg){
+    if(Vars.net.client()){ Call.serverPacketReliable("vg-acu", msg); return; }
+    var err = modAction(Vars.player, msg);
+    if(err != null && !Vars.headless) Vars.ui.showInfoToast(Core.bundle.get(err), 3);
+}
+
+// assembly: an ACU spawned by a core of a team whose ACU fell less than 30 s ago waits in the core for the rest
+function assembleCheck(u){
+    if(assembly == null || !SET.supcom || Vars.net.client() || !isAcu(u) || !u.spawnedByCore) return;
+    var ban = banUntil[u.team.id], kn = banKnown[u.team.id];
+    if(ban === undefined || ban <= Time.time || (kn !== undefined && kn[u.id])) return;
+    if(kn !== undefined) kn[u.id] = true;
+    u.apply(assembly, ban - Time.time);
+}
+Events.on(UnitChangeEvent, function(ev){ try{ assembleCheck(ev.unit); }catch(e){ Log.err("[vg] ACU assembly: " + e); } });
+
+function missileType(){
+    if(missileT == null){
+        var src = Vars.content.unit("vg-acu-uef");
+        src.weapons.each(function(w){ if(w.name == "vg-acu-uef-launcher") missileT = w.bullet; });
+        if(missileT == null) missileT = src.weapons.get(src.weapons.size - 1).bullet;
+    }
+    return missileT;
+}
+function repairPulse(u, mk, server){
+    var r = (6 + 2 * mk) * 8, f = 0.02 + 0.01 * mk;
+    if(!Vars.headless && inView(u.x, u.y, r)) Fx.healWaveDynamic.at(u.x, u.y, r);
+    if(!server) return;
+    Units.nearby(u.team, u.x, u.y, r, function(o){ if(o.damaged()) o.heal(o.maxHealth * f + 10); });
+    Vars.indexer.eachBlock(u.team, u.x, u.y, r, function(b){ return b.damaged(); }, function(b){
+        b.heal(b.maxHealth * f);
+        if(!Vars.headless) Fx.healBlockFull.at(b.x, b.y, b.block.size, HEAL_COL, b.block);
+    });
+}
+function missileSalvo(u, mk){
+    var bt = missileType(), range = bt.speed * bt.lifetime;
+    var tg = Units.closestTarget(u.team, u.x, u.y, range);
+    if(tg == null) return false;
+    var n = mk + 1, base = u.angleTo(tg);
+    for(var k = 0; k < n; k++){
+        var ang = base + (k - (n - 1) / 2) * 8;
+        if(Vars.net.server()) Call.createBullet(bt, u.team, u.x, u.y, ang, bt.damage * u.damageMultiplier, 1, 1);
+        else bt.create(u, u.team, u.x, u.y, ang);
+    }
+    var s = S("acu-missile"); if(s != null && !Vars.headless) s.at(u.x, u.y, Mathf.random(1.05, 1.15), 0.8);
+    return true;
+}
+R(Trigger.update, "acuMods", function(){
+    if(modFail || MOD_DEFS.length == 0 || !Vars.state.isGame()) return;
+    try{
+        var server = !Vars.net.client();
+        if((acuTick -= Time.delta) <= 0){
+            acuTick = 30;
+            var l = [], keep = {};
+            Groups.unit.each(function(u){ if(ACU[u.type.name]){ l.push(u); keep[u.id] = true; } });
+            acuList = l;
+            for(var k in modT) if(!keep[k]) delete modT[k];
+            if(server) for(var a = 0; a < l.length; a++) assembleCheck(l[a]);
+        }
+        if(Vars.state.isPaused()) return;
+        for(var i = 0; i < acuList.length; i++){
+            var u = acuList[i];
+            if(!u.isValid()) continue;
+            var t = modT[u.id];
+            if(t === undefined) t = modT[u.id] = { rp: 0, ms: 0 };
+            var mk = ACU_MK[u.type.name].mk;
+            // personal shield: 25% of max health, refills in 10 s
+            if(server && hasSt(u, MOD.shield.st)){
+                var cap = u.maxHealth * 0.25, sh = F(u, "shield");
+                if(sh < cap) setShield(u, Math.min(cap, sh + cap / 600 * Time.delta));
+            }
+            if(hasSt(u, MOD.repair.st) && (t.rp += Time.delta) >= 90){ t.rp = 0; repairPulse(u, mk, server); }
+            // missiles: Mk+1 homing missiles every 2.5 s at the closest enemy in range (ready as soon as one appears)
+            if(server && hasSt(u, MOD.missiles.st) && (t.ms += Time.delta) >= 150 && !hasSt(u, assembly)){
+                if(missileSalvo(u, mk)) t.ms = 0; else t.ms = 150;
+            }
+        }
+    }catch(e){ modFail = true; Log.err("[vg] ACU modules disabled: " + e); }
+});
+
+// assembling ACUs: progress ring in the team colour around the unit (only a handful of ACUs, only while assembling)
+var asmFail = false;
+R(Trigger.draw, "acuFx", function(){
+    if(asmFail || assembly == null || Vars.headless) return;
+    try{
+        var any = false;
+        for(var i = 0; i < acuList.length; i++){
+            var u = acuList[i];
+            if(!u.isValid() || !inView(u.x, u.y, 48)) continue;
+            var rem = u.getDuration(assembly);
+            if(!(rem > 0)) continue;
+            any = true;
+            var r = u.hitSize * 0.9 + 6, p = Mathf.clamp(1 - rem / BAN_TICKS);
+            Draw.z(Layer.effect);
+            Lines.stroke(2);
+            Draw.color(u.team.color, 0.3);
+            Lines.circle(u.x, u.y, r);
+            Draw.color(assembly.color, 0.6 + 0.3 * Mathf.absin(Time.time, 5, 1));
+            Lines.arc(u.x, u.y, r, p, 90);
+            for(var j = 0; j < 3; j++){
+                var ang = Time.time * 2 + j * 120;
+                Lines.lineAngle(u.x + Angles.trnsx(ang, r + 3), u.y + Angles.trnsy(ang, r + 3), ang, 4);
+            }
+        }
+        if(any) Draw.reset();
+    }catch(e){ asmFail = true; Draw.reset(); Log.err("[vg] ACU assembly visuals disabled: " + e); }
+});
+
+// heavy mech footsteps: sound + light shake when a foot lands (uses the shared ACU list)
+var failD = false, steps = {}, stepClean = 0;
 R(Trigger.update, "steps", function(){
     if(failD || Vars.headless || !Vars.state.isGame()) return;
     try{
-        if(--acuTick <= 0){
-            acuTick = 30;
-            var l = [];
-            Groups.unit.each(function(u){ if(ACU[u.type.name]) l.push(u); });
-            acuList = l;
-        }
         for(var i = 0; i < acuList.length; i++){
             var u = acuList[i];
             if(!u.isValid() || u.isFlying()) continue;
@@ -667,6 +898,104 @@ Events.on(ClientLoadEvent, function(){
         Vars.ui.settings.addCategory(Core.bundle.get("vg.settings"), Icon.settings, function(t){
             t.checkPref("vg-supcom", true);
             t.checkPref("vg-shellfx", true);
+            t.checkPref("vg-acu-defeat", false);
         });
     }catch(e){ Log.err("[vg] settings page: " + e); }
+});
+
+// ---------------- ACU panel (client only): module slots, modules dialog, teleport, assembly timer.
+// Left edge, vertically centred (free on desktop and mobile); rebuilt only when what it shows changes.
+function myAcu(){ var u = Vars.player.unit(); return isAcu(u) ? u : null; }
+function secs(ticks){ return Math.ceil(ticks / 60); }
+function showModules(){
+    var dlg = new BaseDialog(Core.bundle.get("vg.mod.title"));
+    var rebuild = function(){
+        dlg.cont.clear();
+        var u = myAcu();
+        if(u == null){ dlg.hide(); return; }
+        var mods = modsOf(u), core = nearCore(u), free = freeFor(u.team);
+        dlg.cont.add(Core.bundle.format("vg.mod.slots", mods.length, MOD_SLOTS)).left().row();
+        dlg.cont.add(core == null ? "[scarlet]" + Core.bundle.get("vg.mod.nocore") : "[lightgray]" + Core.bundle.get("vg.mod.atcore")).left().padBottom(6).row();
+        dlg.cont.pane(function(list){
+            MOD_DEFS.forEach(function(d){
+                var on = hasSt(u, d.st);
+                list.table(Styles.black6, function(r){
+                    r.margin(8).left();
+                    r.image(d.st.uiIcon).size(48).padRight(10);
+                    r.table(function(info){
+                        info.left();
+                        info.add((on ? "[accent]" : "") + d.st.localizedName).left().row();
+                        info.add("[lightgray]" + d.st.description).wrap().width(Math.min(420, Core.graphics.getWidth() * 0.45)).left().row();
+                        info.table(function(c){
+                            c.left();
+                            costOf(d).forEach(function(it){
+                                var ok = free || (core != null && core.items.has(it.item, it.n));
+                                c.image(it.item.uiIcon).size(20).padRight(2);
+                                c.add((ok ? "" : "[scarlet]") + it.n).padRight(10);
+                            });
+                        }).left().padTop(4);
+                    }).growX().left();
+                    var btn = r.button(Core.bundle.get(on ? "vg.mod.remove" : "vg.mod.install"), function(){
+                        request((on ? "del " : "add ") + d.id);
+                        Time.run(10, rebuild);
+                    }).width(140).height(48);
+                    btn.disabled(!on && (mods.length >= MOD_SLOTS || core == null || (!free && !canPay(core, d))));
+                }).growX().pad(3).row();
+            });
+        }).growX().maxHeight(Core.graphics.getHeight() * 0.7);
+    };
+    rebuild();
+    dlg.addCloseButton();
+    dlg.show();
+}
+var hudFail = false, hudKey = "";
+function hudBuild(p){
+    var u = myAcu();
+    var key = "";
+    if(u != null){
+        key = u.id + "|" + modsOf(u).map(function(d){ return d.id; }).join(",") + "|" + secs(u.getDuration(tpCool)) + "|" + secs(u.getDuration(assembly));
+    }
+    if(key == hudKey) return;
+    hudKey = key;
+    p.clear();
+    if(u == null) return;
+    var mods = modsOf(u);
+    p.table(function(slots){
+        for(var i = 0; i < MOD_SLOTS; i++){
+            var d = mods[i];
+            if(d != null) slots.image(d.st.uiIcon).size(32).pad(2);
+            else slots.image(Tex.whiteui).color(Color.valueOf("3a3a44")).size(32).pad(2);
+            slots.row();
+        }
+    });
+    p.row();
+    p.button(Icon.upgrade, Styles.cleari, function(){ showModules(); }).size(44).padTop(2).name("vg-acu-modules");
+    if(hasSt(u, MOD.teleport.st)){
+        p.row();
+        var cd = u.getDuration(tpCool);
+        var tb = p.button(Icon.home, Styles.cleari, function(){
+            fxAt(Fx.teleportOut, u.x, u.y, 0, u.team.color);
+            request("tp");
+        }).size(44);
+        tb.disabled(cd > 0 || hasSt(u, assembly));
+        if(cd > 0){ p.row(); p.add("[lightgray]" + secs(cd) + Core.bundle.get("vg.sec")); }
+    }
+    var asm = u.getDuration(assembly);
+    if(asm > 0){ p.row(); p.add("[accent]" + Core.bundle.format("vg.mod.assembly", secs(asm))).padTop(4); }
+}
+Events.on(ClientLoadEvent, function(){
+    try{
+        Vars.ui.hudGroup.fill(function(t){
+            t.name = "vg-acu-panel";
+            t.left();
+            t.visible(function(){ return !hudFail && Vars.ui.hudfrag.shown && Vars.state.isGame() && myAcu() != null; });
+            t.table(Styles.black6, function(p){
+                p.margin(4);
+                p.update(function(){
+                    if(hudFail) return;
+                    try{ hudBuild(p); }catch(e){ hudFail = true; Log.err("[vg] ACU panel disabled: " + e); }
+                });
+            });
+        });
+    }catch(e){ Log.err("[vg] ACU panel: " + e); }
 });
