@@ -134,7 +134,8 @@
       "colorTo": "ffd27a00"
      }
     ]
-   }
+   },
+   "damage": 25
   },
   "charge": {
    "type": "ArtilleryBulletType",
@@ -244,7 +245,8 @@
       "colorTo": "fff1b000"
      }
     ]
-   }
+   },
+   "damage": 25
   },
   "pyratite": {
    "type": "ArtilleryBulletType",
@@ -354,7 +356,8 @@
       "colorTo": "ff5a1e"
      }
     ]
-   }
+   },
+   "damage": 25
   }
  }
 }

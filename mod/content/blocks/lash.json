@@ -14,16 +14,38 @@
  "range": 160,
  "reload": 14,
  "rotateSpeed": 8,
- "recoil": 1.2,
+ "recoil": 0,
+ "recoils": 2,
  "shake": 0.4,
- "shootY": 9,
+ "shootY": 8.6,
  "heatColor": "ff3355",
  "cooldownTime": 24,
  "shootSound": "lash-shoot",
  "shoot": {
   "type": "ShootAlternate",
   "barrels": 2,
-  "spread": 5.5
+  "spread": 2.9
+ },
+ "drawer": {
+  "type": "DrawTurret",
+  "parts": [
+   {
+    "type": "RegionPart",
+    "suffix": "-barrel-l",
+    "progress": "recoil",
+    "recoilIndex": 0,
+    "moveY": -1.2,
+    "heatColor": "ff3355"
+   },
+   {
+    "type": "RegionPart",
+    "suffix": "-barrel-r",
+    "progress": "recoil",
+    "recoilIndex": 1,
+    "moveY": -1.2,
+    "heatColor": "ff3355"
+   }
+  ]
  },
  "consumes": {
   "power": 3.5

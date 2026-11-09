@@ -1,0 +1,13 @@
+{
+ "type": "Wall",
+ "category": "defense",
+ "size": 2,
+ "health": 7200,
+ "armor": 15,
+ "research": "vg-wolfram-wall",
+ "requirements": [
+  "tungsten-core/24",
+  "steel/8"
+ ],
+ "variants": 2
+}

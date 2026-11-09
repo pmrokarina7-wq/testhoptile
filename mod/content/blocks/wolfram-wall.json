@@ -1,0 +1,13 @@
+{
+ "type": "Wall",
+ "category": "defense",
+ "size": 1,
+ "health": 1800,
+ "armor": 15,
+ "research": "vg-steel-wall",
+ "requirements": [
+  "tungsten-core/6",
+  "steel/2"
+ ],
+ "variants": 3
+}

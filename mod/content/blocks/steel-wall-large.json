@@ -6,5 +6,6 @@
  "research": "steel-wall",
  "requirements": [
   "steel/24"
- ]
+ ],
+ "variants": 2
 }

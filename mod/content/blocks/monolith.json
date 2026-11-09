@@ -200,8 +200,10 @@
        "colorTo": "dfe6ff00"
       }
      ]
-    }
-   }
+    },
+    "damage": 90
+   },
+   "damage": 1600
   },
   "tungsten-core": {
    "type": "ArtilleryBulletType",
@@ -299,7 +301,8 @@
       "colorTo": "e6e9ef00"
      }
     ]
-   }
+   },
+   "damage": 1100
   },
   "magnet": {
    "type": "ArtilleryBulletType",
@@ -400,7 +403,8 @@
       "colorTo": "ff8fa000"
      }
     ]
-   }
+   },
+   "damage": 2600
   }
  }
 }

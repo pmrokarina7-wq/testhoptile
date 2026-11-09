@@ -1,0 +1,8 @@
+{
+ "type": "ShieldWall", "category": "defense", "size": 1, "health": 3500, "armor": 20,
+ "research": "vg-wolfram-wall-large",
+ "requirements": ["titanium/12", "plastanium/6", "phase-fabric/4", "luminite/8"],
+ "shieldHealth": 2000, "regenSpeed": 4, "breakCooldown": 600, "chanceDeflect": 12,
+ "glowColor": "9df0a888", "glowMag": 0.5, "glowScl": 10,
+ "consumes": {"power": 0.1}, "conductivePower": true
+}

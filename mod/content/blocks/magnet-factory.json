@@ -3,7 +3,7 @@
  "category": "crafting",
  "size": 2,
  "health": 420,
- "research": "vg-electrolyzer",
+ "research": "vg-bauxite-electrolyzer",
  "requirements": [
   "copper/90",
   "lead/80",

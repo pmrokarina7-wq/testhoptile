@@ -1,0 +1,8 @@
+{
+ "type": "PointDefenseTurret", "category": "turret", "size": 4, "health": 5200, "armor": 10,
+ "research": "vg-suppressor",
+ "requirements": ["lead/1200", "silicon/1200", "titanium/800", "plastanium/400", "surge-alloy/300", "superconductor/400", "quantum-matrix/1500"],
+ "range": 240, "reload": 90, "bulletDamage": 100000, "shootLength": 12, "rotateSpeed": 12,
+ "color": "9df0a8", "shootSound": "quantum-intercept",
+ "consumes": {"power": 25}
+}

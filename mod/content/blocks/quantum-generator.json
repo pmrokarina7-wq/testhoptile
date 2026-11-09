@@ -1,0 +1,13 @@
+{
+ "type": "ConsumeGenerator", "category": "power", "size": 5, "health": 4200,
+ "research": "vg-fusion-reactor",
+ "requirements": ["lead/1200", "silicon/1000", "graphite/800", "metaglass/400", "plastanium/400", "surge-alloy/250", "superconductor/400", "quantum-matrix/200"],
+ "powerProduction": 100, "itemDuration": 120, "warmupSpeed": 0.008, "liquidCapacity": 60,
+ "effectChance": 0.05, "generateEffect": "generatespark", "generateEffectRange": 56,
+ "consumes": {"liquid": {"liquid": "quantum-condensate", "amount": 0.25}},
+ "ambientSound": "qgen-loop", "ambientSoundVolume": 0.15,
+ "drawer": {"type": "DrawMulti", "drawers": [
+  {"type": "DrawDefault"},
+  {"type": "DrawGlowRegion", "color": "b8a0ff", "alpha": 0.95, "glowScale": 3, "glowIntensity": 0.45}
+ ]}
+}

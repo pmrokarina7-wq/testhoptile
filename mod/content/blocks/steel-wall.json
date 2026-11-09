@@ -6,5 +6,6 @@
  "research": "titanium-wall",
  "requirements": [
   "steel/6"
- ]
+ ],
+ "variants": 3
 }

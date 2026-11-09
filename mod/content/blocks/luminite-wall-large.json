@@ -1,0 +1,8 @@
+{
+ "type": "ShieldWall", "category": "defense", "size": 2, "health": 14000, "armor": 20,
+ "research": "vg-luminite-wall",
+ "requirements": ["titanium/48", "plastanium/24", "phase-fabric/16", "luminite/32"],
+ "shieldHealth": 8000, "regenSpeed": 12, "breakCooldown": 600, "chanceDeflect": 12,
+ "glowColor": "9df0a888", "glowMag": 0.5, "glowScl": 10,
+ "consumes": {"power": 0.35}, "conductivePower": true
+}

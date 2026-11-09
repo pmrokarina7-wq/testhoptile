@@ -144,7 +144,8 @@
       "colorTo": "ffd27a00"
      }
     ]
-   }
+   },
+   "damage": 130
   },
   "pyratite": {
    "type": "ArtilleryBulletType",
@@ -256,7 +257,8 @@
       "colorTo": "ff5a1e"
      }
     ]
-   }
+   },
+   "damage": 70
   },
   "aluminum": {
    "type": "ArtilleryBulletType",
@@ -404,8 +406,10 @@
        "colorTo": "e8eef500"
       }
      ]
-    }
-   }
+    },
+    "damage": 38
+   },
+   "damage": 40
   }
  }
 }

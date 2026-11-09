@@ -1,0 +1,9 @@
+{
+ "type": "ForceProjector", "category": "effect", "size": 7, "health": 12000, "armor": 12,
+ "research": "vg-citadel",
+ "requirements": ["lead/3000", "silicon/2400", "titanium/1600", "plastanium/1000", "phase-fabric/800", "surge-alloy/500", "superconductor/800", "lumen-core/900"],
+ "radius": 224, "shieldHealth": 50000, "cooldownNormal": 2.2, "cooldownLiquid": 2.5, "cooldownBrokenBase": 1.2,
+ "phaseRadiusBoost": 0, "phaseShieldBoost": 0,
+ "consumes": {"power": 40},
+ "ambientSound": "aegis-hum", "ambientSoundVolume": 0.16
+}

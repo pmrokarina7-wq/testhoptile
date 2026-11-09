@@ -15,8 +15,9 @@
  "reload": 7,
  "rotateSpeed": 10,
  "inaccuracy": 2,
- "recoil": 1,
- "shootY": 7,
+ "recoil": 0,
+ "recoils": 2,
+ "shootY": 10,
  "heatColor": "ffb050",
  "cooldownTime": 18,
  "shootSound": "rivet-shoot",
@@ -25,7 +26,28 @@
  "shoot": {
   "type": "ShootAlternate",
   "barrels": 2,
-  "spread": 4.5
+  "spread": 3
+ },
+ "drawer": {
+  "type": "DrawTurret",
+  "parts": [
+   {
+    "type": "RegionPart",
+    "suffix": "-barrel-l",
+    "progress": "recoil",
+    "recoilIndex": 0,
+    "moveY": -1.5,
+    "heatColor": "ff9a3a"
+   },
+   {
+    "type": "RegionPart",
+    "suffix": "-barrel-r",
+    "progress": "recoil",
+    "recoilIndex": 1,
+    "moveY": -1.5,
+    "heatColor": "ff9a3a"
+   }
+  ]
  },
  "ammoTypes": {
   "copper": {

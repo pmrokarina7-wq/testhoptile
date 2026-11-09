@@ -1,0 +1,13 @@
+{
+ "type": "GenericCrafter", "category": "crafting", "size": 5, "health": 3800,
+ "research": "vg-lumen-forge",
+ "requirements": ["lead/1000", "silicon/900", "titanium/600", "plastanium/350", "surge-alloy/200", "superconductor/300", "lumen-core/150"],
+ "outputItem": "quantum-matrix/1", "outputLiquid": {"liquid": "quantum-condensate", "amount": 0.15},
+ "craftTime": 120, "liquidCapacity": 60, "itemCapacity": 20,
+ "consumes": {"items": {"items": ["null-quartz/2", "superconductor/1", "surge-alloy/1"]}, "power": 40},
+ "craftEffect": "smeltsmoke", "ambientSound": "resonator-loop", "ambientSoundVolume": 0.12,
+ "drawer": {"type": "DrawMulti", "drawers": [
+  {"type": "DrawDefault"},
+  {"type": "DrawGlowRegion", "color": "b8a0ff", "alpha": 0.9, "glowScale": 4, "glowIntensity": 0.4}
+ ]}
+}

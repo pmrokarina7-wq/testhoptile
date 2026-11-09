@@ -1,0 +1,9 @@
+name: vgtest
+displayName: Vanguard Arsenal test stand
+author: dev
+version: "1.0"
+minGameVersion: 146
+java: false
+hidden: true
+dependencies: ["vg"]
+description: "Local test harness for Vanguard Arsenal. Not for release."

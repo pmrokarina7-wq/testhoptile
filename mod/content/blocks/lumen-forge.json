@@ -1,0 +1,13 @@
+{
+ "type": "GenericCrafter", "category": "crafting", "size": 5, "health": 3600,
+ "research": "vg-mass-separator-3",
+ "requirements": ["lead/900", "silicon/700", "titanium/500", "plastanium/300", "phase-fabric/150", "superconductor/200"],
+ "outputItem": "lumen-core/1", "outputLiquid": {"liquid": "lumen-ether", "amount": 0.2},
+ "craftTime": 90, "liquidCapacity": 60, "itemCapacity": 20,
+ "consumes": {"items": {"items": ["luminite/2", "phase-fabric/1"]}, "power": 30},
+ "craftEffect": "smeltsmoke", "ambientSound": "lumen-forge-loop", "ambientSoundVolume": 0.12,
+ "drawer": {"type": "DrawMulti", "drawers": [
+  {"type": "DrawDefault"},
+  {"type": "DrawGlowRegion", "color": "9df0a8", "alpha": 0.9, "glowScale": 5, "glowIntensity": 0.35}
+ ]}
+}

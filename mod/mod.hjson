@@ -1,7 +1,7 @@
 name: vg
 displayName: Vanguard Arsenal
 author: Muse
-version: "2.5.0-alpha1"
+version: "2.5.0-alpha2"
 minGameVersion: 146
 java: false
 description: "UEF/Cybran/Aeon/Seraphim-inspired artillery, defence and industry. 2.5 stage 1: T4 — Monolith strategic artillery (heat-fed), Bastion railgun, Suppressor EMP, Citadel shield; iridite, tritium ice, iridium, superconductor, liquid nitrogen; cryocondenser, iridium smelter, superconductor chamber, plasma heater, fusion reactor. 2.0: T1-T3 arsenal, BKM cores and ACUs."

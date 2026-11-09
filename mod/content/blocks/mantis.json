@@ -148,7 +148,8 @@
       "colorTo": "ff557700"
      }
     ]
-   }
+   },
+   "damage": 170
   },
   "tungsten-core": {
    "type": "ArtilleryBulletType",
@@ -262,7 +263,8 @@
     "collidesAir": false,
     "hitEffect": "hitBulletSmall",
     "despawnEffect": "hitBulletSmall"
-   }
+   },
+   "damage": 140
   },
   "magnet": {
    "type": "ArtilleryBulletType",
@@ -363,7 +365,8 @@
       "colorTo": "8fd0fa00"
      }
     ]
-   }
+   },
+   "damage": 360
   }
  }
 }
