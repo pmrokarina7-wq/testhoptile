@@ -3,8 +3,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-if ! command -v java >/dev/null; then
-  apt-get update -qq && apt-get install -y -qq openjdk-17-jre-headless >/dev/null
+# java: server and client; xvfb + mesa: the desktop client in tools/clienttest.sh renders through llvmpipe; zip: packing
+need=""
+command -v java >/dev/null || need="$need openjdk-17-jre-headless"
+command -v Xvfb >/dev/null || need="$need xvfb"
+dpkg -s libgl1-mesa-dri >/dev/null 2>&1 || need="$need libgl1-mesa-dri libglx-mesa0"
+command -v zip >/dev/null || need="$need zip unzip"
+if [ -n "$need" ]; then
+  apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $need >/dev/null
 fi
 
 mkdir -p .cache/mindustry
