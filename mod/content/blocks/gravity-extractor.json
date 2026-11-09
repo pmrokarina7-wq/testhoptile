@@ -1,0 +1,9 @@
+{
+ "type": "BeamDrill", "category": "production", "size": 6, "health": 9000, "armor": 10,
+ "research": "vg-laser-extractor",
+ "requirements": ["copper/3000", "lead/2400", "silicon/2400", "titanium/1800", "plastanium/900", "surge-alloy/600", "superconductor/800", "lumen-core/500", "seraphimium/600"],
+ "tier": 10, "range": 12, "drillTime": 80, "laserWidth": 1.0, "fogRadius": 8, "itemCapacity": 60, "liquidCapacity": 40,
+ "sparkColor": "c49bff", "glowColor": "e4c8ff",
+ "consumes": {"power": 30, "liquid": {"liquid": "antimatter", "amount": 0.04}},
+ "ambientSound": "antimatter-loop", "ambientSoundVolume": 0.1
+}
