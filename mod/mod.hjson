@@ -1,7 +1,7 @@
 name: vg
 displayName: Vanguard Arsenal
 author: Muse
-version: "2.5.0-beta1"
+version: "2.5.0-beta2"
 minGameVersion: 146
 java: false
-description: "UEF/Cybran/Aeon/Seraphim-inspired artillery, defence and industry. 2.5 beta1: Command Center (T3) and Citadel (T5) cores, ACU Mk II-III, engineers T2-T3, SupCom settings. 2.5 stage 3: T6 Seraphim — Requiem artillery, Obelisk beam, Seraphim Net, Chronofield, Seraphim Dome, antimatter industry, Annihilation Reactor, singular shells. Stage 2: T5 Aeon. 2.5 stage 1: T4 — Monolith strategic artillery (heat-fed), Bastion railgun, Suppressor EMP, Citadel shield; iridite, tritium ice, iridium, superconductor, liquid nitrogen; cryocondenser, iridium smelter, superconductor chamber, plasma heater, fusion reactor. 2.0: T1-T3 arsenal, BKM cores and ACUs."
+description: "UEF/Cybran/Aeon/Seraphim-inspired artillery, defence and industry. 2.5 beta2: ACU modules (2 of 6), recall gate, ACU assembly after a loss, Veteran setting. beta1: Command Center (T3) and Citadel (T5) cores, ACU Mk II-III, engineers T2-T3, SupCom settings. 2.5 stage 3: T6 Seraphim — Requiem artillery, Obelisk beam, Seraphim Net, Chronofield, Seraphim Dome, antimatter industry, Annihilation Reactor, singular shells. Stage 2: T5 Aeon. 2.5 stage 1: T4 — Monolith strategic artillery (heat-fed), Bastion railgun, Suppressor EMP, Citadel shield; iridite, tritium ice, iridium, superconductor, liquid nitrogen; cryocondenser, iridium smelter, superconductor chamber, plasma heater, fusion reactor. 2.0: T1-T3 arsenal, BKM cores and ACUs."
