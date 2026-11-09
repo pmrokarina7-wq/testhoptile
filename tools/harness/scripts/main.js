@@ -64,6 +64,7 @@ function setup(){
         layoutTempestLab();
         layoutT6Labs();
         layoutBetaLabs();
+        layoutBeta1();
         planShots();
         t0 = Time.time;
         L("setup done: " + manifest.blocks.length + " blocks, " + shots.length + " shots");
@@ -108,11 +109,11 @@ function layoutShowcase(){
         prevCat = cat;
     }
     var ux = 8, uy = y + rowH + 4;
-    ["vg-acu-uef", "vg-acu-cybran", "vg-engineer"].forEach(function(n){
+    ["vg-acu-uef", "vg-acu-cybran", "vg-engineer", "vg-acu-uef-mk2", "vg-acu-cybran-mk2", "vg-acu-uef-mk3", "vg-acu-cybran-mk3", "vg-engineer-2", "vg-engineer-3"].forEach(function(n){
         var u = Vars.content.unit(n);
         if(u == null){ E("missing unit " + n); return; }
         try{ u.spawn(Team.sharded, ux * 8, uy * 8); manifest.blocks.push({ name: n, x: ux, y: uy, size: 2, cat: "unit" }); }catch(e){ E("spawn " + n + ": " + e); }
-        ux += 6;
+        ux += 7;
     });
     manifest.showcaseTop = uy + 4;
 }
@@ -222,10 +223,13 @@ function layoutMech(){
         if(t != null){ t.setBlock(Blocks.thoriumWall, Team.crux, 0); acuWalls.push(t.build); }
     }
     acuUnit = Vars.content.unit("vg-acu-uef").spawn(Team.sharded, (MX + 116) * 8, 150 * 8);
-    // SupCom build rule: a non-cheat team owning a BKM core; plans are added in the draw phase (see postDraw)
-    place(blk("vg-core-uef"), 112, 146, Team.green, 0);
-    poly = UnitTypes.poly.spawn(Team.green, 130 * 8, 152 * 8);
-    eng = Vars.content.unit("vg-engineer").spawn(Team.green, 134 * 8, 152 * 8);
+    // SupCom build rule: sharded owns a BKM core; plans are added in the draw phase (see postDraw).
+    // Must not be another team: vanilla drops plans within enemyCoreBuildRadius (50 tiles) of an enemy core.
+    place(blk("vg-core-uef"), 112, 146, Team.sharded, 0);
+    poly = UnitTypes.poly.spawn(Team.sharded, 130 * 8, 152 * 8);
+    eng = Vars.content.unit("vg-engineer").spawn(Team.sharded, 134 * 8, 152 * 8);
+    // plain controller: the default "assist" AI follows the player and drops its own plans while the player is idle
+    eng.controller(new AIController());
     eng.addBuild(new BuildPlan(134, 155, 0, Blocks.copperWall));
 }
 function wallHp(){ var s = 0; for(var i = 0; i < acuWalls.length; i++){ var w = acuWalls[i]; s += (w != null && w.isValid()) ? w.health : 0; } return s; }
@@ -338,6 +342,7 @@ function mechUpdate(){
     tempestUpdate();
     t6Update(t);
     betaUpdate(t);
+    beta1Update(t);
 }
 
 function mechReport(){
@@ -349,6 +354,7 @@ function mechReport(){
     mech.intercept = qi.stats;
     t6Report();
     betaReport();
+    beta1Report();
     delete mech.mantis; delete mech.monolith;
     manifest.mech = mech;
     L("mech " + JSON.stringify(mech));
@@ -498,6 +504,63 @@ function betaReport(){
     mech.byproducts = liq;
 }
 
+// ------------------------------------------------------------------ beta-1 labs: engineer tiers, ACU death build ban, core upgrade, stress
+//  sharded (owns BKM cores; green would be shot by the range turrets): T1 engineer asked for a T3 wall must be refused,
+//  the T3 engineer builds it; the mech-lab ACU dies at t=400, so a plan given at t>440 must be refused (30 s ban).
+//  sharded: the player pilots an ACU Mk I spawned by a UEF Bridgehead; a Command Center is placed over it at t=300
+//  and the player must be in an ACU Mk II afterwards.
+//  stress: ~3100 menders. Walls (update=false) never enter Groups.build and idle conveyors sleep out of it;
+//  menders keep updating, so they stay in Groups.build and load the registry rebuild
+var bb = { eng1: null, eng3: null, acu: null, acuKilled: false, plans1: false, plans2: false, upgraded: false, playerBefore: "", playerAfter: "" };
+function layoutBeta1(){
+    bb.eng3 = Vars.content.unit("vg-engineer-3").spawn(Team.sharded, 140 * 8, 152 * 8);
+    bb.eng3.controller(new AIController());
+    place(blk("vg-core-uef"), 160, 168, Team.sharded, 0);
+    var a = Vars.content.unit("vg-acu-uef").create(Team.sharded);
+    a.set(162 * 8, 166 * 8); a.spawnedByCore = true; a.add();
+    Vars.player.unit(a);
+    var n = 0;
+    for(var x = 124; x < 225; x++) for(var y = 200; y < 231; y++){
+        var t = Vars.world.tile(x, y);
+        if(t != null && t.build == null && t.block() == Blocks.air){ t.setBlock(Blocks.mender, Team.sharded, 0); n++; }
+    }
+    bb.stress = n;
+}
+function beta1Plans(){
+    var t = Time.time - t0;
+    if(!bb.plans1 && t > 130){
+        bb.plans1 = true;
+        if(eng != null) eng.addBuild(new BuildPlan(138, 155, 0, blk("vg-wolfram-wall")));
+        if(bb.eng3 != null) bb.eng3.addBuild(new BuildPlan(140, 155, 0, blk("vg-wolfram-wall")));
+    }
+    if(!bb.plans2 && mech.acuKilled && t > 440){
+        bb.plans2 = true;
+        if(bb.eng3 != null) bb.eng3.addBuild(new BuildPlan(142, 155, 0, Blocks.copperWall));
+    }
+}
+function nobuild(u){ var s = statusByName("vg-supcom-nobuild"); return u != null && u.isValid() && s != null && u.hasEffect(s); }
+function beta1Update(t){
+    // hidden no-build status: non-builders of a BKM-core team always, every unit of the team during the ACU ban
+    if(bb.st1 == null && t > 200) bb.st1 = { poly: nobuild(poly), eng3: nobuild(bb.eng3) };
+    if(bb.st2 == null && mech.acuKilled && t > 460) bb.st2 = { eng3: nobuild(bb.eng3), acuPlayer: nobuild(Vars.player.unit()) };
+    if(!bb.upgraded && t > 300){
+        bb.upgraded = true;
+        var pu = Vars.player.unit();
+        bb.playerBefore = pu == null ? "none" : String(pu.type.name);
+        var core = place(blk("vg-core-uef-2"), 160, 168, Team.sharded, 0);
+        if(core != null) Events.fire(new BlockBuildEndEvent(core.tile, null, Team.sharded, false, null));
+        var nu = Vars.player.unit();
+        bb.playerAfter = nu == null ? "none" : String(nu.type.name);
+    }
+}
+function beta1Report(){
+    mech.engTier = { t1Refused: String(Vars.world.tile(138, 155).block().name), t3Built: String(Vars.world.tile(140, 155).block().name) };
+    mech.acuBan = { acuKilled: mech.acuKilled, planAfterDeath: String(Vars.world.tile(142, 155).block().name) };
+    mech.coreUpgrade = { before: bb.playerBefore, after: bb.playerAfter };
+    mech.noBuildStatus = { beforeBan: bb.st1, inBan: bb.st2 };
+    mech.stress = { menders: bb.stress || 0, groupsBuild: Groups.build.size() };
+}
+
 // ------------------------------------------------------------------ screenshots
 function planShots(){
     var top = manifest.showcaseTop;
@@ -517,6 +580,8 @@ function planShots(){
     addShot("29-t6-labs-east", t0 + 330, 245, 292, 1.0);
     addShot("29b-dome-reactor-close", t0 + 534, 300, 299, 1.6);
     addShot("40-beta-labs", t0 + 345, 58, 214, 1.4);
+    addShot("41-beta1-core", t0 + 380, 162, 168, 2.2);
+    addShot("42-showcase-units", t0 + 90, 37, 37, 1.8);
     addShot("21-range-overview-b", t0 + 520, rc, 118, 0.9);
     for(var cx = 26, k = 0; cx < manifest.rangeEnd + 20; cx += 52, k++){
         addShot("3" + k + "-range-turrets-" + cx, t0 + 700 + k * 30, cx, 104, 2.6);
@@ -538,6 +603,7 @@ function finish(){
 
 Events.on(ClientLoadEvent, function(){
     OUT.mkdirs();
+    Core.settings.put("vg-profile", true);
     Time.run(30, setup);
 });
 
@@ -566,6 +632,7 @@ var polyPending = true;
 Events.run(Trigger.postDraw, function(){
     // build plans for the rule test are added in the render phase (like player input), after the world settled
     if(polyPending && poly != null && Time.time - t0 > 120){ polyPending = false; poly.addBuild(new BuildPlan(130, 155, 0, Blocks.copperWall)); }
+    beta1Plans();
     if(armedFrame < 0 || done || Core.graphics.getFrameId() < armedFrame) return;
     var s = shots[shotIdx];
     // wait (up to 120 frames) until the camera has actually reached the shot target

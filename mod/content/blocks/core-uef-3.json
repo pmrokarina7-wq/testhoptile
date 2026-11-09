@@ -1,0 +1,22 @@
+{
+ "type": "CoreBlock",
+ "category": "effect",
+ "size": 6,
+ "health": 18000,
+ "armor": 12,
+ "itemCapacity": 20000,
+ "unitCapModifier": 32,
+ "unitType": "vg-acu-uef-mk3",
+ "research": "vg-core-uef-2",
+ "ambientSound": "core-hum",
+ "ambientSoundVolume": 0.07,
+ "requirements": [
+  "copper/10000",
+  "lead/10000",
+  "silicon/7000",
+  "titanium/4000",
+  "plastanium/1500",
+  "superconductor/1000",
+  "lumen-core/600"
+ ]
+}

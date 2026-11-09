@@ -1,0 +1,22 @@
+{
+ "type": "CoreBlock",
+ "category": "effect",
+ "size": 5,
+ "health": 8000,
+ "armor": 7,
+ "itemCapacity": 13000,
+ "unitCapModifier": 26,
+ "unitType": "vg-acu-cybran-mk2",
+ "research": "vg-core-cybran",
+ "ambientSound": "core-hum",
+ "ambientSoundVolume": 0.07,
+ "requirements": [
+  "copper/6000",
+  "lead/5000",
+  "silicon/3500",
+  "graphite/2000",
+  "steel/1500",
+  "tungsten-core/800",
+  "magnet/400"
+ ]
+}
