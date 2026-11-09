@@ -1,0 +1,104 @@
+{
+ "type": "mech",
+ "speed": 0.6,
+ "hitSize": 15,
+ "health": 2800,
+ "armor": 7,
+ "rotateSpeed": 3.6,
+ "canBoost": true,
+ "boostMultiplier": 1.6,
+ "riseSpeed": 0.07,
+ "mechLandShake": 2,
+ "mechStepParticles": true,
+ "mechStride": 7.13,
+ "buildSpeed": 2.6,
+ "mineTier": 4,
+ "mineSpeed": 6,
+ "itemCapacity": 110,
+ "buildBeamOffset": 6.9,
+ "deathSound": "acu-death",
+ "deathExplosionEffect": "reactorExplosion",
+ "lightColor": "ff3355",
+ "research": "vg-core-cybran-2",
+ "weapons": [
+  {
+   "name": "acu-cybran-mk2-laser",
+   "x": 6.61,
+   "y": 0.86,
+   "top": false,
+   "mirror": false,
+   "reload": 50,
+   "recoil": 1,
+   "shootY": 6.21,
+   "shake": 1,
+   "heatColor": "ff3355",
+   "cooldownTime": 40,
+   "shootSound": "acu-cybran-laser",
+   "bullet": {
+    "type": "LaserBulletType",
+    "length": 150,
+    "damage": 126.0,
+    "width": 12,
+    "colors": [
+     "ff335566",
+     "ff3355",
+     "ffd6dd"
+    ],
+    "hitColor": "ff3355",
+    "lightColor": "ff3355",
+    "buildingDamageMultiplier": 0.5,
+    "hitEffect": {
+     "type": "MultiEffect",
+     "effects": [
+      {
+       "type": "ParticleEffect",
+       "lifetime": 16,
+       "particles": 8,
+       "cone": 24,
+       "length": 14.0,
+       "baseLength": 2,
+       "line": true,
+       "strokeFrom": 1.8,
+       "strokeTo": 0,
+       "lenFrom": 4.8999999999999995,
+       "lenTo": 1,
+       "colorFrom": "ff8899",
+       "colorTo": "ff3355"
+      },
+      {
+       "type": "WaveEffect",
+       "lifetime": 12,
+       "sizeFrom": 1,
+       "sizeTo": 7.699999999999999,
+       "strokeFrom": 2.5,
+       "strokeTo": 0,
+       "colorFrom": "ff8899",
+       "colorTo": "ff3355"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "acu-cybran-mk2-emp",
+   "x": -6.61,
+   "y": 0.86,
+   "top": false,
+   "mirror": false,
+   "reload": 70,
+   "recoil": 0.8,
+   "shootY": 4.14,
+   "heatColor": "ff3355",
+   "shootSound": "acu-cybran-emp",
+   "bullet": {
+    "type": "LightningBulletType",
+    "damage": 36.0,
+    "lightningLength": 14,
+    "lightningLengthRand": 6,
+    "lightningColor": "ff5577",
+    "status": "shocked",
+    "statusDuration": 120
+   }
+  }
+ ]
+}

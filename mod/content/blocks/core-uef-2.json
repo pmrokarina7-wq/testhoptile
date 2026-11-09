@@ -1,0 +1,22 @@
+{
+ "type": "CoreBlock",
+ "category": "effect",
+ "size": 5,
+ "health": 9000,
+ "armor": 8,
+ "itemCapacity": 13000,
+ "unitCapModifier": 24,
+ "unitType": "vg-acu-uef-mk2",
+ "research": "vg-core-uef",
+ "ambientSound": "core-hum",
+ "ambientSoundVolume": 0.07,
+ "requirements": [
+  "copper/6000",
+  "lead/6000",
+  "silicon/4000",
+  "titanium/2000",
+  "steel/1500",
+  "tungsten-core/800",
+  "magnet/400"
+ ]
+}

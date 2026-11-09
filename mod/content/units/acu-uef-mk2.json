@@ -1,0 +1,218 @@
+{
+ "type": "mech",
+ "speed": 0.5,
+ "hitSize": 16,
+ "health": 3200,
+ "armor": 9,
+ "rotateSpeed": 3.2,
+ "canBoost": true,
+ "boostMultiplier": 1.5,
+ "riseSpeed": 0.06,
+ "mechLandShake": 2.5,
+ "mechStepParticles": true,
+ "mechStride": 7.47,
+ "buildSpeed": 2.4,
+ "mineTier": 4,
+ "mineSpeed": 6.5,
+ "itemCapacity": 120,
+ "buildBeamOffset": 6.9,
+ "deathSound": "acu-death",
+ "deathExplosionEffect": "reactorExplosion",
+ "lightColor": "6ab8ff",
+ "research": "vg-core-uef-2",
+ "weapons": [
+  {
+   "name": "acu-uef-mk2-cannon",
+   "x": 6.9,
+   "y": 0.57,
+   "top": false,
+   "mirror": false,
+   "reload": 24,
+   "recoil": 1.5,
+   "shootY": 5.98,
+   "shake": 0.8,
+   "heatColor": "6ab8ff",
+   "cooldownTime": 30,
+   "shootSound": "acu-uef-shot",
+   "bullet": {
+    "type": "BasicBulletType",
+    "speed": 5.2,
+    "damage": 75.6,
+    "lifetime": 34,
+    "width": 8,
+    "height": 13,
+    "frontColor": "e6f6ff",
+    "backColor": "6ab8ff",
+    "trailColor": "6ab8ff",
+    "trailLength": 6,
+    "trailWidth": 1.8,
+    "hitColor": "6ab8ff",
+    "lightColor": "6ab8ff",
+    "buildingDamageMultiplier": 0.6,
+    "shootEffect": {
+     "type": "MultiEffect",
+     "effects": [
+      {
+       "type": "ParticleEffect",
+       "lifetime": 16,
+       "particles": 8,
+       "cone": 24,
+       "length": 16.0,
+       "baseLength": 2,
+       "line": true,
+       "strokeFrom": 1.8,
+       "strokeTo": 0,
+       "lenFrom": 5.6000000000000005,
+       "lenTo": 1,
+       "colorFrom": "e6f6ff",
+       "colorTo": "6ab8ff"
+      },
+      {
+       "type": "WaveEffect",
+       "lifetime": 12,
+       "sizeFrom": 1,
+       "sizeTo": 8.8,
+       "strokeFrom": 2.5,
+       "strokeTo": 0,
+       "colorFrom": "e6f6ff",
+       "colorTo": "6ab8ff"
+      }
+     ]
+    },
+    "hitEffect": {
+     "type": "MultiEffect",
+     "effects": [
+      {
+       "type": "ExplosionEffect",
+       "lifetime": 40,
+       "waveColor": "6ab8ff",
+       "sparkColor": "6ab8ff",
+       "smokeColor": "55555a",
+       "waveStroke": 3,
+       "waveRad": 10,
+       "waveLife": 12,
+       "smokes": 7,
+       "smokeSize": 4.2,
+       "smokeSizeBase": 0.6,
+       "smokeRad": 8.0,
+       "sparks": 9,
+       "sparkRad": 12.0,
+       "sparkLen": 5,
+       "sparkStroke": 1.6
+      },
+      {
+       "type": "WaveEffect",
+       "lifetime": 30,
+       "sizeFrom": 2,
+       "sizeTo": 10,
+       "strokeFrom": 2,
+       "strokeTo": 0,
+       "colorFrom": "ffffffaa",
+       "colorTo": "6ab8ff00"
+      }
+     ]
+    },
+    "despawnEffect": {
+     "type": "MultiEffect",
+     "effects": [
+      {
+       "type": "ExplosionEffect",
+       "lifetime": 40,
+       "waveColor": "6ab8ff",
+       "sparkColor": "6ab8ff",
+       "smokeColor": "55555a",
+       "waveStroke": 3,
+       "waveRad": 8,
+       "waveLife": 12,
+       "smokes": 7,
+       "smokeSize": 4.2,
+       "smokeSizeBase": 0.6,
+       "smokeRad": 6.4,
+       "sparks": 9,
+       "sparkRad": 9.6,
+       "sparkLen": 5,
+       "sparkStroke": 1.6
+      },
+      {
+       "type": "WaveEffect",
+       "lifetime": 30,
+       "sizeFrom": 2,
+       "sizeTo": 8,
+       "strokeFrom": 2,
+       "strokeTo": 0,
+       "colorFrom": "ffffffaa",
+       "colorTo": "6ab8ff00"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "acu-uef-mk2-launcher",
+   "x": -6.9,
+   "y": 0.57,
+   "top": false,
+   "mirror": false,
+   "reload": 150,
+   "recoil": 1,
+   "shootY": 2.76,
+   "inaccuracy": 6,
+   "velocityRnd": 0.1,
+   "shootSound": "acu-missile",
+   "shoot": {
+    "shots": 2,
+    "shotDelay": 8
+   },
+   "bullet": {
+    "type": "MissileBulletType",
+    "speed": 3.4,
+    "damage": 25.2,
+    "splashDamage": 108.0,
+    "splashDamageRadius": 22,
+    "lifetime": 68,
+    "width": 7,
+    "height": 10,
+    "homingPower": 0.08,
+    "homingRange": 60,
+    "frontColor": "fff4d6",
+    "backColor": "ffb347",
+    "trailColor": "b8b8b8",
+    "hitShake": 1.5,
+    "hitSound": "explosion",
+    "hitEffect": {
+     "type": "MultiEffect",
+     "effects": [
+      {
+       "type": "ExplosionEffect",
+       "lifetime": 40,
+       "waveColor": "ffb347",
+       "sparkColor": "ffb347",
+       "smokeColor": "55555a",
+       "waveStroke": 3,
+       "waveRad": 22,
+       "waveLife": 12,
+       "smokes": 7,
+       "smokeSize": 4.2,
+       "smokeSizeBase": 0.6,
+       "smokeRad": 17.6,
+       "sparks": 9,
+       "sparkRad": 26.4,
+       "sparkLen": 5,
+       "sparkStroke": 1.6
+      },
+      {
+       "type": "WaveEffect",
+       "lifetime": 30,
+       "sizeFrom": 2,
+       "sizeTo": 22,
+       "strokeFrom": 2,
+       "strokeTo": 0,
+       "colorFrom": "ffffffaa",
+       "colorTo": "ffb34700"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

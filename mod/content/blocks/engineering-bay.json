@@ -19,6 +19,24 @@
     "steel/20",
     "lead/20"
    ]
+  },
+  {
+   "unit": "vg-engineer-2",
+   "time": 2400,
+   "requirements": [
+    "silicon/80",
+    "titanium/40",
+    "cobalt-alloy/30"
+   ]
+  },
+  {
+   "unit": "vg-engineer-3",
+   "time": 3600,
+   "requirements": [
+    "silicon/150",
+    "plastanium/40",
+    "magnet/40"
+   ]
   }
  ],
  "consumes": {
