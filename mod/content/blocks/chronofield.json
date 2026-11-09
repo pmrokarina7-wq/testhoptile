@@ -1,0 +1,9 @@
+{
+ "type": "MendProjector", "category": "effect", "size": 7, "health": 14000, "armor": 14,
+ "research": "vg-quantum-interceptor",
+ "requirements": ["lead/3600", "silicon/3200", "titanium/2400", "plastanium/1400", "surge-alloy/1000", "phase-fabric/1400", "superconductor/1200", "quantum-matrix/1600", "seraphimium/1600"],
+ "range": 480, "reload": 1000000000, "healPercent": 0, "phaseBoost": 0, "phaseRangeBoost": 0,
+ "baseColor": "b48cff", "phaseColor": "b48cff", "liquidCapacity": 40,
+ "consumes": {"power": 45, "liquid": {"liquid": "antimatter", "amount": 0.04}},
+ "ambientSound": "chrono-field", "ambientSoundVolume": 0.14
+}

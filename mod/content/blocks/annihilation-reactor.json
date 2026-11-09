@@ -1,0 +1,11 @@
+{
+ "type": "HeaterGenerator", "category": "power", "size": 7, "health": 16000, "armor": 12,
+ "research": "vg-quantum-generator",
+ "requirements": ["lead/3600", "silicon/3000", "graphite/2400", "metaglass/1600", "plastanium/1200", "surge-alloy/900", "superconductor/1400", "quantum-matrix/600", "seraphimium/800"],
+ "powerProduction": 300, "heatOutput": 60, "itemDuration": 90, "warmupSpeed": 0.004, "liquidCapacity": 80,
+ "consumes": {"items": {"items": ["sand/1"]}, "liquid": {"liquid": "antimatter", "amount": 0.15}},
+ "explosionDamage": 15000, "explosionRadius": 24, "explosionMinWarmup": 0.4, "explosionShake": 14, "explosionShakeDuration": 40,
+ "explodeEffect": "impactReactorExplosion", "explodeSound": "annihilation-blast",
+ "effectChance": 0.06, "generateEffect": "generatespark", "generateEffectRange": 80,
+ "ambientSound": "annihilation-loop", "ambientSoundVolume": 0.2
+}
