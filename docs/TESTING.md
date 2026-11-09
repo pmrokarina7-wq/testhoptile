@@ -4,7 +4,7 @@
 
 | Команда | Что делает |
 | --- | --- |
-| `tools/setup-env.sh` | Java, `server-release.jar` v146, Python-окружение для генераторов арта (numpy, pillow) |
+| `tools/setup-env.sh` | Java, Xvfb + Mesa и zip для клиента, `server-release.jar` v146, Python-окружение для генераторов арта (numpy, pillow) |
 | `tools/loadtest.sh` | собирает `build/vanguard-arsenal-<версия>.zip` из `mod/` и грузит его выделенным сервером v146; лог в `build/server.log` |
 | `tools/clienttest.sh` | запускает ПК-клиент v146 (Xvfb + Mesa llvmpipe) с модом и тестовым стендом; скриншоты и замеры в `build/shots/` |
 | `tools/make_gif.py` | собирает кадры `build/shots/gif-*.png` в `battle.gif` |
