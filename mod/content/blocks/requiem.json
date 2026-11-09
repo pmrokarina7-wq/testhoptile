@@ -1,0 +1,47 @@
+{
+ "type": "ItemTurret", "category": "turret", "size": 10, "health": 52000, "armor": 24,
+ "research": "vg-tempest",
+ "requirements": ["copper/8000", "graphite/4000", "silicon/4000", "plastanium/2400", "surge-alloy/1800", "iridium/2400", "superconductor/1800", "quantum-matrix/1200", "seraphimium/1000"],
+ "targetAir": false, "range": 2400, "minRange": 480, "reload": 720, "rotateSpeed": 0.4,
+ "inaccuracy": 2, "velocityRnd": 0.03, "recoil": 0, "shake": 14, "shootY": 56,
+ "shoot": {"type": "ShootAlternate", "barrels": 3, "spread": 10, "shots": 3, "shotDelay": 14},
+ "shootSound": "requiem-shoot", "ammoUseEffect": "casing3", "heatColor": "c890ff", "cooldownTime": 420,
+ "maxAmmo": 12, "heatRequirement": 60, "maxHeatEfficiency": 2,
+ "consumes": {"coolant": {"amount": 0.8}},
+ "drawer": {"type": "DrawTurret", "parts": [{"type": "RegionPart", "suffix": "-barrel", "progress": "recoil", "moveY": -9, "heatColor": "c890ff"}]},
+ "ammoTypes": {
+  "quantum-matrix": {
+   "type": "ArtilleryBulletType", "speed": 6, "lifetime": 400, "width": 26, "height": 30,
+   "damage": 13500, "splashDamage": 4500, "splashDamageRadius": 112, "buildingDamageMultiplier": 1.2,
+   "hittable": false, "reflectable": false, "knockback": 2.5, "hitShake": 13, "hitSound": "requiem-hit",
+   "status": "quantum-stasis", "statusDuration": 180,
+   "backColor": "a070ff", "frontColor": "f4e8ff", "trailColor": "c890ff99", "trailLength": 18, "trailWidth": 4.2,
+   "lightning": 8, "lightningLength": 12, "lightningDamage": 90, "lightningColor": "c890ff",
+   "shootEffect": {"type": "MultiEffect", "effects": [
+    {"type": "ParticleEffect", "lifetime": 22, "particles": 12, "cone": 30, "length": 32, "baseLength": 3, "line": true, "strokeFrom": 2.4, "strokeTo": 0, "lenFrom": 11, "lenTo": 1, "colorFrom": "f4e8ff", "colorTo": "c890ff"},
+    {"type": "WaveEffect", "lifetime": 18, "sizeFrom": 2, "sizeTo": 22, "strokeFrom": 3.4, "strokeTo": 0, "colorFrom": "f4e8ff", "colorTo": "c890ff"}
+   ]},
+   "smokeEffect": {"type": "ParticleEffect", "lifetime": 70, "particles": 10, "cone": 34, "length": 28, "baseLength": 4, "sizeFrom": 5, "sizeTo": 0, "colorFrom": "6a5a80", "colorTo": "2e2640"},
+   "hitEffect": {"type": "MultiEffect", "effects": [
+    {"type": "ExplosionEffect", "lifetime": 50, "waveColor": "c890ff", "sparkColor": "f4e8ff", "smokeColor": "33284a", "waveStroke": 4.5, "waveRad": 112, "waveLife": 18, "smokes": 10, "smokeSize": 5, "smokeSizeBase": 0.6, "smokeRad": 90, "sparks": 14, "sparkRad": 130, "sparkLen": 7, "sparkStroke": 2},
+    {"type": "WaveEffect", "lifetime": 44, "sizeFrom": 4, "sizeTo": 128, "strokeFrom": 3.4, "strokeTo": 0, "colorFrom": "f4e8ffcc", "colorTo": "c890ff00"}
+   ]}
+  },
+  "singular-core": {
+   "type": "ArtilleryBulletType", "speed": 6, "lifetime": 400, "width": 28, "height": 32,
+   "damage": 6000, "splashDamage": 6000, "splashDamageRadius": 140, "buildingDamageMultiplier": 1.5, "reloadMultiplier": 0.75,
+   "hittable": false, "reflectable": false, "absorbable": false, "knockback": 4, "hitShake": 16, "hitSound": "requiem-hit",
+   "backColor": "3a1a60", "frontColor": "c890ff", "trailColor": "6a3aa0aa", "trailLength": 20, "trailWidth": 4.6,
+   "shootEffect": {"type": "MultiEffect", "effects": [
+    {"type": "ParticleEffect", "lifetime": 24, "particles": 12, "cone": 30, "length": 34, "baseLength": 3, "line": true, "strokeFrom": 2.6, "strokeTo": 0, "lenFrom": 12, "lenTo": 1, "colorFrom": "c890ff", "colorTo": "2a1040"},
+    {"type": "WaveEffect", "lifetime": 20, "sizeFrom": 22, "sizeTo": 2, "strokeFrom": 3.6, "strokeTo": 0, "colorFrom": "c890ff", "colorTo": "1a0a26"}
+   ]},
+   "smokeEffect": {"type": "ParticleEffect", "lifetime": 80, "particles": 10, "cone": 34, "length": 28, "baseLength": 4, "sizeFrom": 5.5, "sizeTo": 0, "colorFrom": "2a1a3a", "colorTo": "0a0610"},
+   "hitEffect": {"type": "MultiEffect", "effects": [
+    {"type": "WaveEffect", "lifetime": 30, "sizeFrom": 150, "sizeTo": 6, "strokeFrom": 1, "strokeTo": 6, "colorFrom": "1a0a2600", "colorTo": "c890ff"},
+    {"type": "ExplosionEffect", "lifetime": 60, "waveColor": "c890ff", "sparkColor": "f4e8ff", "smokeColor": "140a20", "waveStroke": 5, "waveRad": 140, "waveLife": 22, "smokes": 14, "smokeSize": 6, "smokeSizeBase": 0.8, "smokeRad": 110, "sparks": 18, "sparkRad": 160, "sparkLen": 8, "sparkStroke": 2.2},
+    {"type": "WaveEffect", "lifetime": 56, "sizeFrom": 6, "sizeTo": 170, "strokeFrom": 4, "strokeTo": 0, "colorFrom": "f4e8ffdd", "colorTo": "6a3aa000"}
+   ]}
+  }
+ }
+}

@@ -354,6 +354,12 @@ function dsInit(){
         var qt = tem.ammoTypes.get(qm);
         if(qt != null) dsT.put(qt, { r: 80, k: 0.02, d: 180, c: DS_GREEN });
     }
+    // Requiem quantum shell: same freeze, wider
+    var req = Vars.content.block("vg-requiem");
+    if(req != null && qm != null){
+        var rqt = req.ammoTypes.get(qm);
+        if(rqt != null) dsT.put(rqt, { r: 112, k: 0.02, d: 180, c: Color.valueOf("c890ff") });
+    }
     dsDone = true;
 }
 try{ Events.on(ContentInitEvent, function(){ try{ dsInit(); }catch(e){ Log.err("[vg] T4 init: " + e); } }); }catch(e){}
@@ -395,41 +401,105 @@ var qiFx = new Effect(22, function(e){
     Fill.circle(e.x, e.y, 3 * e.fout());
     Draw.reset();
 });
-var qiBlock = null, qiImmune = null, qiFail = false, qiTimers = {}, qiTick = 0;
-function qiInit(){
-    qiBlock = Vars.content.block("vg-quantum-interceptor");
-    qiImmune = new ObjectSet();
-    ["vg-tempest"].forEach(function(n){
-        var bl = Vars.content.block(n);
-        if(bl == null || bl.ammoTypes == null) return;
-        bl.ammoTypes.values().toSeq().each(function(bt){
-            qiImmune.add(bt);
-            if(bt.fragBullet != null) qiImmune.add(bt.fragBullet);
+// Interceptor: every `reload` ticks a powered building destroys the nearest enemy shell within range,
+// except shells of the `immune` blocks. Used by the Quantum Interceptor (T5) and the Seraphim Net (T6).
+function interceptor(blockName, immuneBlocks){
+    var st = { block: null, immune: null, fail: false, timers: {} };
+    function init(){
+        st.block = Vars.content.block(blockName);
+        st.immune = new ObjectSet();
+        immuneBlocks.forEach(function(n){
+            var bl = Vars.content.block(n);
+            if(bl == null || bl.ammoTypes == null) return;
+            bl.ammoTypes.values().toSeq().each(function(bt){
+                st.immune.add(bt);
+                if(bt.fragBullet != null) st.immune.add(bt.fragBullet);
+            });
         });
+    }
+    Events.on(WorldLoadEvent, function(){ st.timers = {}; });
+    Events.run(Trigger.update, function(){
+        if(st.fail || !Vars.state.isPlaying() || Vars.net.client()) return;
+        try{
+            if(st.block == null){ init(); if(st.block == null){ st.fail = true; return; } }
+            var blk = st.block;
+            Groups.build.each(function(bd){
+                if(bd.block != blk) return;
+                // efficiency is 0 while vanilla point defence has no hittable target, so use the powered state instead
+                var k = bd.pos(), t = (st.timers[k] || 0) + Time.delta * bd.potentialEfficiency;
+                if(t < blk.reload){ st.timers[k] = t; return; }
+                var best = null, bestD = blk.range * blk.range, tm = bd.team, bx = bd.x, by = bd.y;
+                Groups.bullet.intersect(bx - blk.range, by - blk.range, blk.range * 2, blk.range * 2, function(b){
+                    if(b.team == tm || st.immune.contains(b.type)) return;
+                    var d2 = (b.x - bx) * (b.x - bx) + (b.y - by) * (b.y - by);
+                    if(d2 < bestD){ bestD = d2; best = b; }
+                });
+                if(best == null){ st.timers[k] = t; return; }
+                st.timers[k] = 0;
+                qiFx.at(bx, by, 0, blk.color, new Vec2(best.x, best.y));
+                Fx.absorb.at(best.x, best.y, 0, blk.color);
+                blk.shootSound.at(bx, by, Mathf.random(0.95, 1.05));
+                best.remove();
+            });
+        }catch(e){ st.fail = true; Log.err("[vg] " + blockName + " disabled: " + e); }
     });
 }
-Events.on(WorldLoadEvent, function(){ qiTimers = {}; });
+interceptor("vg-quantum-interceptor", ["vg-tempest", "vg-requiem"]);
+
+// ---------------- Vanguard Arsenal 2.5 - T6 scripts (Seraphim)
+//  * Requiem shells get the ballistic shadow / impact marker / incoming whistle; quantum shells freeze (see dsInit)
+//  * Seraphim Net: the interceptor above with nothing immune (T5-T6 and singular shells included)
+//  * Chronofield: powered fields put 'chrono-slow' (speed and fire rate x0.3) on enemy units in range (server/host)
+//  * Seraphim Dome: singular shells are not absorbable, so every vanilla shield ignores them; the Dome alone
+//    catches them here and takes x4 their damage
+ARTY["vg-requiem"] = { col: Color.valueOf("c890ff"), whistle: "scorpion-whistle", h: 40 };
+interceptor("vg-seraphim-net", []);
+
+var chronoBlock = null, chronoSt = null, chronoFail = false, chronoTick = 0;
 Events.run(Trigger.update, function(){
-    if(qiFail || !Vars.state.isPlaying() || Vars.net.client()) return;
+    if(chronoFail || !Vars.state.isPlaying() || Vars.net.client()) return;
+    if(++chronoTick < 20) return;
+    chronoTick = 0;
     try{
-        if(qiBlock == null){ qiInit(); if(qiBlock == null){ qiFail = true; return; } }
+        if(chronoBlock == null){
+            chronoBlock = Vars.content.block("vg-chronofield");
+            chronoSt = Vars.content.getByName(ContentType.status, "vg-chrono-slow");
+            if(chronoBlock == null || chronoSt == null){ chronoFail = true; return; }
+        }
         Groups.build.each(function(bd){
-            if(bd.block != qiBlock) return;
-            // efficiency is 0 while vanilla point defence has no hittable target, so use the powered state instead
-            var k = bd.pos(), t = (qiTimers[k] || 0) + Time.delta * bd.potentialEfficiency;
-            if(t < qiBlock.reload){ qiTimers[k] = t; return; }
-            var best = null, bestD = qiBlock.range * qiBlock.range, tm = bd.team, bx = bd.x, by = bd.y;
-            Groups.bullet.intersect(bx - qiBlock.range, by - qiBlock.range, qiBlock.range * 2, qiBlock.range * 2, function(b){
-                if(b.team == tm || qiImmune.contains(b.type)) return;
-                var d2 = (b.x - bx) * (b.x - bx) + (b.y - by) * (b.y - by);
-                if(d2 < bestD){ bestD = d2; best = b; }
-            });
-            if(best == null){ qiTimers[k] = t; return; }
-            qiTimers[k] = 0;
-            qiFx.at(bx, by, 0, qiBlock.color, new Vec2(best.x, best.y));
-            Fx.absorb.at(best.x, best.y, 0, qiBlock.color);
-            qiBlock.shootSound.at(bx, by, Mathf.random(0.95, 1.05));
-            best.remove();
+            if(bd.block != chronoBlock || !(F(bd, "efficiency") > 0.01)) return;
+            Units.nearbyEnemies(bd.team, bd.x, bd.y, chronoBlock.range, function(u){ u.apply(chronoSt, 40); });
         });
-    }catch(e){ qiFail = true; Log.err("[vg] quantum interceptor disabled: " + e); }
+    }catch(e){ chronoFail = true; Log.err("[vg] chronofield disabled: " + e); }
+});
+
+var domeBlock = null, singularT = null, domeFail = false, DOME_COL = Color.valueOf("c890ff");
+function domeInit(){
+    domeBlock = Vars.content.block("vg-seraphim-dome");
+    singularT = new ObjectSet();
+    var rq = Vars.content.block("vg-requiem"), sc = Vars.content.item("vg-singular-core");
+    if(rq != null && sc != null){
+        var bt = rq.ammoTypes.get(sc);
+        if(bt != null) singularT.add(bt);
+    }
+}
+Events.run(Trigger.update, function(){
+    if(domeFail || !Vars.state.isPlaying() || Vars.net.client()) return;
+    try{
+        if(domeBlock == null){ domeInit(); if(domeBlock == null || singularT.size == 0){ domeFail = true; return; } }
+        Groups.build.each(function(bd){
+            if(bd.block != domeBlock || bd.broken) return;
+            var r = bd.realRadius();
+            if(!(r > 0.001)) return;
+            var tm = bd.team, x = bd.x, y = bd.y;
+            Groups.bullet.intersect(x - r, y - r, r * 2, r * 2, function(b){
+                if(b.team == tm || !singularT.contains(b.type)) return;
+                if(!Intersector.isInRegularPolygon(domeBlock.sides, x, y, r, domeBlock.shieldRotation, b.x, b.y)) return;
+                Fx.absorb.at(b.x, b.y, 0, DOME_COL);
+                bd.hit = 1;
+                bd.buildup += b.damage * 4;
+                b.absorb();
+            });
+        });
+    }catch(e){ domeFail = true; Log.err("[vg] seraphim dome disabled: " + e); }
 });

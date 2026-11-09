@@ -1,0 +1,15 @@
+{
+ "type": "HeaterGenerator", "category": "power", "size": 7, "health": 9000, "armor": 12,
+ "research": "vg-antimatter-trap",
+ "requirements": ["lead/5000", "silicon/4000", "graphite/3000", "metaglass/1500", "plastanium/1500", "surge-alloy/1200", "superconductor/2000", "seraphimium/1200"],
+ "powerProduction": 300, "heatOutput": 60, "itemDuration": 240, "warmupSpeed": 0.005, "liquidCapacity": 120,
+ "effectChance": 0.06, "generateEffect": "generatespark", "generateEffectRange": 80,
+ "consumes": {"liquid": {"liquid": "antimatter", "amount": 0.25}},
+ "explosionDamage": 15000, "explosionRadius": 36, "explosionMinWarmup": 0.3,
+ "explosionShake": 18, "explosionShakeDuration": 60, "explodeEffect": "reactorExplosion", "explodeSound": "annihilation-blast",
+ "ambientSound": "annihilation-loop", "ambientSoundVolume": 0.18,
+ "drawer": {"type": "DrawMulti", "drawers": [
+  {"type": "DrawDefault"},
+  {"type": "DrawHeatOutput", "heatColor": "c890ffcc"}
+ ]}
+}

@@ -1,0 +1,13 @@
+{
+ "type": "GenericCrafter", "category": "crafting", "size": 6, "health": 6400,
+ "research": "vg-antimatter-trap",
+ "requirements": ["lead/2500", "silicon/2200", "titanium/1500", "plastanium/900", "phase-fabric/500", "surge-alloy/600", "superconductor/900", "quantum-matrix/600"],
+ "outputItem": "seraphimium/1",
+ "craftTime": 120, "itemCapacity": 20, "liquidCapacity": 60,
+ "consumes": {"items": {"items": ["seraphite/2", "quantum-matrix/1"]}, "liquid": {"liquid": "antimatter", "amount": 0.06}, "power": 50},
+ "craftEffect": "smeltsmoke", "ambientSound": "antimatter-loop", "ambientSoundVolume": 0.12,
+ "drawer": {"type": "DrawMulti", "drawers": [
+  {"type": "DrawDefault"},
+  {"type": "DrawGlowRegion", "color": "c890ff", "alpha": 0.9, "glowScale": 4, "glowIntensity": 0.4}
+ ]}
+}

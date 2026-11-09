@@ -1,0 +1,13 @@
+{
+ "type": "GenericCrafter", "category": "crafting", "size": 7, "health": 9000,
+ "research": "vg-seraphite-refinery",
+ "requirements": ["lead/4000", "silicon/3500", "titanium/2500", "plastanium/1500", "phase-fabric/1000", "surge-alloy/1000", "superconductor/1500", "seraphimium/800"],
+ "outputItem": "singular-core/1",
+ "craftTime": 180, "itemCapacity": 20, "liquidCapacity": 80,
+ "consumes": {"items": {"items": ["singularite/1", "seraphimium/2"]}, "liquid": {"liquid": "antimatter", "amount": 0.1}, "power": 120},
+ "craftEffect": "smeltsmoke", "ambientSound": "collider-loop", "ambientSoundVolume": 0.14,
+ "drawer": {"type": "DrawMulti", "drawers": [
+  {"type": "DrawDefault"},
+  {"type": "DrawGlowRegion", "color": "c890ff", "alpha": 0.95, "glowScale": 2.5, "glowIntensity": 0.5}
+ ]}
+}

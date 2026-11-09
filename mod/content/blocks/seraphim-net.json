@@ -1,0 +1,9 @@
+{
+ "type": "PointDefenseTurret", "category": "turret", "size": 6, "health": 9000, "armor": 14,
+ "research": "vg-quantum-interceptor",
+ "requirements": ["lead/5000", "silicon/5000", "titanium/4000", "plastanium/3000", "surge-alloy/2500", "superconductor/2500", "quantum-matrix/1500", "seraphimium/1500"],
+ "range": 320, "reload": 240, "bulletDamage": 100000, "shootLength": 18, "rotateSpeed": 10,
+ "color": "c890ff", "shootSound": "seraphim-net",
+ "liquidCapacity": 40,
+ "consumes": {"power": 60, "liquid": {"liquid": "antimatter", "amount": 0.05}}
+}
