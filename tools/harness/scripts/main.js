@@ -65,6 +65,7 @@ function setup(){
         layoutT6Labs();
         layoutBetaLabs();
         layoutBeta1();
+        layoutBeta2();
         planShots();
         t0 = Time.time;
         L("setup done: " + manifest.blocks.length + " blocks, " + shots.length + " shots");
@@ -343,6 +344,7 @@ function mechUpdate(){
     t6Update(t);
     betaUpdate(t);
     beta1Update(t);
+    beta2Update(t);
 }
 
 function mechReport(){
@@ -355,6 +357,7 @@ function mechReport(){
     t6Report();
     betaReport();
     beta1Report();
+    beta2Report();
     delete mech.mantis; delete mech.monolith;
     manifest.mech = mech;
     L("mech " + JSON.stringify(mech));
@@ -561,6 +564,124 @@ function beta1Report(){
     mech.stress = { menders: bb.stress || 0, groupsBuild: Groups.build.size() };
 }
 
+// ------------------------------------------------------------------ beta-2 labs: ACU modules, teleport, respawn assembly, Veteran
+//  effects lab (x 236-266, y 172-194): a Cybran ACU with repair + missiles next to a damaged dagger and wall, and a
+//  disarmed enemy fortress 24 tiles away (beyond its laser, inside the module missiles' 29 tiles); a UEF ACU with
+//  shield + cannon 31 tiles from the target (beyond its own launcher). Module statuses are applied directly here.
+//  player ACU (requests go through the mod's "vg-acu" packet handler, like a client): install / slot limit / transfer
+//  on a Citadel upgrade when the player first stands at the beta-1 core; teleport when far from every core; then the
+//  ACU is killed and the respawned ACU must be assembling. UI screenshots and the Veteran defeat run after all shots.
+var b2 = { phase: 0, t: 0 };
+function acuPacket(msg){ Vars.netServer.getPacketHandlers("vg-acu").each(function(h){ h.get(Vars.player, msg); }); }
+function modSt(id){ return statusByName("vg-acu-mod-" + id); }
+function modList(u){
+    var o = [];
+    ["cannon", "shield", "build", "repair", "missiles", "teleport"].forEach(function(id){ var s = modSt(id); if(u != null && s != null && u.getDuration(s) > 0) o.push(id); });
+    return o.join(",");
+}
+function layoutBeta2(){
+    b2.a = Vars.content.unit("vg-acu-cybran").spawn(Team.sharded, 240 * 8, 178 * 8);
+    b2.b = Vars.content.unit("vg-acu-uef").spawn(Team.sharded, 236 * 8, 192 * 8);
+    b2.a.controller(new AIController()); b2.b.controller(new AIController());
+    ["repair", "missiles"].forEach(function(id){ b2.a.apply(modSt(id), 1e9); });
+    ["shield", "cannon"].forEach(function(id){ b2.b.apply(modSt(id), 1e9); });
+    b2.ally = UnitTypes.dagger.spawn(Team.sharded, 243 * 8, 181 * 8);
+    b2.ally.controller(new AIController());
+    b2.ally.health = b2.ally.maxHealth * 0.4;
+    b2.wall = place(Blocks.titaniumWallLarge, 237, 182, Team.sharded, 0);
+    b2.wall.health = b2.wall.maxHealth * 0.3;
+    b2.target = UnitTypes.fortress.spawn(Team.crux, 264 * 8, 178 * 8);
+    b2.target.apply(StatusEffects.disarmed, 1e9);
+    b2.targetMax = b2.target.maxHealth;
+}
+function beta2Update(t){
+    if(b2.target != null && b2.target.isValid()){ b2.target.set(264 * 8, 178 * 8); b2.target.vel.setZero(); }
+    if(b2.ally != null && b2.ally.isValid()){ b2.ally.set(243 * 8, 181 * 8); b2.ally.vel.setZero(); }
+    var pu = Vars.player.unit(), ok = pu != null && pu.isValid();
+    if(b2.phase == 0 && bb.upgraded && ok && pu.within(160.5 * 8, 168.5 * 8, 10 * 8)){
+        acuPacket("add cannon"); acuPacket("add build"); acuPacket("add shield");
+        b2.afterThree = modList(pu);
+        acuPacket("del build"); acuPacket("add teleport");
+        b2.beforeUpgrade = modList(pu);
+        var core = place(blk("vg-core-uef-3"), 160, 168, Team.sharded, 0);
+        if(core != null) Events.fire(new BlockBuildEndEvent(core.tile, null, Team.sharded, false, null));
+        var nu = Vars.player.unit();
+        b2.mk3 = String(nu.type.name); b2.afterUpgrade = modList(nu);
+        b2.phase = 1; b2.t = t;
+    }else if(b2.phase == 1 && ok && t > b2.t + 30 && !pu.within(pu.closestCore(), 30 * 8)){
+        var x0 = pu.x, y0 = pu.y;
+        acuPacket("tp");
+        var pu2 = Vars.player.unit(), c = pu2.closestCore();
+        b2.tp = { moved: Math.round(Mathf.dst(x0, y0, pu2.x, pu2.y) / 8), toCore: Math.round(pu2.dst(c) / 8), cooldown: Math.round(pu2.getDuration(statusByName("vg-acu-tp-cooldown"))) };
+        pu2.set(x0, y0);
+        acuPacket("tp");
+        b2.tp.second = Math.round(Mathf.dst(x0, y0, Vars.player.unit().x, Vars.player.unit().y) / 8);
+        b2.phase = 2; b2.t = t;
+    }else if(b2.phase == 2 && ok && t > b2.t + 60){
+        b2.killedType = String(pu.type.name);
+        pu.kill();
+        b2.phase = 3; b2.t = t;
+    }else if(b2.phase == 3 && t > b2.t + 150){
+        var asm = statusByName("vg-acu-assembly"), others = 0;
+        Groups.unit.each(function(u){ if(u != Vars.player.unit() && u.team == Team.sharded && u.hasEffect(asm)) others++; });
+        b2.respawn = ok ? { type: String(pu.type.name), spawnedByCore: pu.spawnedByCore, assembly: Math.round(pu.getDuration(asm)), speed: pu.speedMultiplier, modules: modList(pu), othersAssembling: others } : { dead: true };
+        b2.phase = 4;
+    }
+}
+function beta2Report(){
+    var hf = function(u){ return u != null && u.isValid() ? Math.round(u.healthf() * 100) / 100 : -1; };
+    mech.acuModules = {
+        lab: {
+            allyHealth: hf(b2.ally), wallHealth: b2.wall != null && b2.wall.isValid() ? Math.round(b2.wall.healthf() * 100) / 100 : -1,
+            targetDamage: b2.target == null ? -1 : (b2.target.isValid() ? Math.round(b2.targetMax - b2.target.health) : "killed"),
+            shield: b2.b == null ? -1 : Math.round(b2.b.shield), shieldCap: b2.b == null ? -1 : Math.round(b2.b.maxHealth * 0.25),
+            damageMult: b2.b == null ? -1 : Math.round(b2.b.damageMultiplier * 100) / 100
+        },
+        player: { afterThree: b2.afterThree, beforeUpgrade: b2.beforeUpgrade, mk3: b2.mk3, afterUpgrade: b2.afterUpgrade, tp: b2.tp, killed: b2.killedType, respawn: b2.respawn },
+        defeat: b2.defeat, ui: b2.ui || []
+    };
+}
+// after all world shots: HUD panel and modules dialog screenshots (captured after the UI is drawn), then Veteran
+var uiPhase = 0, uiFrame = 0, uiShot = null;
+function uiStep(){
+    var f = Core.graphics.getFrameId();
+    try{
+        if(uiPhase == 0){
+            Vars.ui.hudfrag.shown = true;
+            var pu = Vars.player.unit();
+            if(pu != null && pu.isValid()){ pu.set(162 * 8, 166 * 8); Vars.player.set(162 * 8, 166 * 8); }
+            acuPacket("add missiles"); acuPacket("add teleport");
+            Core.camera.position.set(162 * 8, 166 * 8); Vars.renderer.setScale(2.4);
+            uiPhase = 1; uiFrame = f + 40;
+        }else if(uiPhase == 1 && f >= uiFrame){
+            uiShot = "50-acu-hud"; uiPhase = 2;
+        }else if(uiPhase == 2 && uiShot == null){
+            var btn = Vars.ui.hudGroup.find("vg-acu-modules");
+            if(btn != null) btn.fireClick(); else E("ACU panel button not found");
+            uiPhase = 3; uiFrame = f + 40;
+        }else if(uiPhase == 3 && f >= uiFrame){
+            uiShot = "51-acu-modules-dialog"; uiPhase = 4;
+        }else if(uiPhase == 4 && uiShot == null){
+            if(Core.scene.getDialog() != null) Core.scene.getDialog().hide();
+            Core.settings.put("vg-acu-defeat", true);
+            var pu2 = Vars.player.unit();
+            if(pu2 != null && pu2.isValid()) pu2.kill();
+            b2.defeat = Vars.state.gameOver;
+            Core.settings.put("vg-acu-defeat", false);
+            return true;
+        }
+    }catch(e){ E("ui step " + uiPhase + ": " + e); return true; }
+    return false;
+}
+Events.run(Trigger.uiDrawEnd, function(){
+    if(uiShot == null) return;
+    try{
+        ScreenUtils.saveScreenshot(OUT.child(uiShot + ".png"));
+        b2.ui = (b2.ui || []).concat([uiShot]);
+    }catch(e){ E("ui screenshot " + uiShot + ": " + e); }
+    uiShot = null;
+});
+
 // ------------------------------------------------------------------ screenshots
 function planShots(){
     var top = manifest.showcaseTop;
@@ -581,6 +702,7 @@ function planShots(){
     addShot("29b-dome-reactor-close", t0 + 534, 300, 299, 1.6);
     addShot("40-beta-labs", t0 + 345, 58, 214, 1.4);
     addShot("41-beta1-core", t0 + 380, 162, 168, 2.2);
+    addShot("43-acu-modules-lab", t0 + 380, 250, 183, 1.8);
     addShot("42-showcase-units", t0 + 90, 37, 37, 1.8);
     addShot("21-range-overview-b", t0 + 520, rc, 118, 0.9);
     for(var cx = 26, k = 0; cx < manifest.rangeEnd + 20; cx += 52, k++){
@@ -613,7 +735,7 @@ Events.run(Trigger.update, function(){
         if(++feedTick >= 15){ feedTick = 0; feed(); }
         mechUpdate();
         if(Time.time - t0 > 200 && ++waveTick >= 240){ waveTick = 0; spawnEnemies(); buildTargets(); }
-        if(shotIdx >= shots.length){ finish(); return; }
+        if(shotIdx >= shots.length){ if(uiStep()) finish(); return; }
         var s = shots[shotIdx];
         // the desktop input pulls the camera toward the player's unit every frame, so the player moves with the shot
         var sx = s.cx * 8, sy = s.cy * 8;
