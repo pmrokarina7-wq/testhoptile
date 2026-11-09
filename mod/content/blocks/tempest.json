@@ -3,7 +3,7 @@
  "research": "vg-monolith",
  "requirements": ["copper/3000", "graphite/1500", "silicon/1500", "plastanium/800", "surge-alloy/600", "steel/1500", "tungsten-core/800", "iridium/900", "superconductor/600", "quantum-matrix/400"],
  "targetAir": false, "range": 1280, "minRange": 320, "reload": 540, "rotateSpeed": 0.6,
- "inaccuracy": 2.5, "velocityRnd": 0.04, "recoil": 0, "shake": 10, "shootY": 44,
+ "inaccuracy": 2.5, "velocityRnd": 0.04, "recoil": 0, "shake": 10, "shootY": 47,
  "shoot": {"type": "ShootAlternate", "barrels": 4, "spread": 7, "shots": 4, "shotDelay": 9},
  "shootSound": "tempest-shoot", "ammoUseEffect": "casing3", "heatColor": "9df0a8", "cooldownTime": 300,
  "maxAmmo": 16, "heatRequirement": 40, "maxHeatEfficiency": 2,

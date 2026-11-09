@@ -3,7 +3,7 @@
  "research": "vg-wasp",
  "requirements": ["copper/2000", "lead/1600", "silicon/1600", "titanium/1000", "plastanium/600", "phase-fabric/300", "superconductor/500", "lumen-core/400"],
  "targetGround": false, "targetAir": true, "range": 600, "rotateSpeed": 3, "aimChangeSpeed": 2.5,
- "shootY": 22, "shootCone": 25, "shootWarmupSpeed": 0.08, "heatColor": "9df0a8",
+ "shootY": 17, "shootCone": 25, "shootWarmupSpeed": 0.08, "heatColor": "9df0a8",
  "shootSound": "none", "loopSound": "halo-beam", "loopSoundVolume": 0.9,
  "consumes": {"power": 30, "liquid": {"liquid": "lumen-ether", "amount": 0.1}},
  "shootType": {

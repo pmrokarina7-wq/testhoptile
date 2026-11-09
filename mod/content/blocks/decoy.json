@@ -5,6 +5,8 @@
  "health": 4000,
  "armor": 8,
  "priority": 3,
+ "flashHit": true,
+ "flashColor": "ffd36a",
  "research": "vg-steel-wall-large",
  "requirements": [
   "steel/50",

@@ -18,9 +18,9 @@
  "rotateSpeed": 4,
  "inaccuracy": 7,
  "velocityRnd": 0.12,
- "recoil": 1.5,
+ "recoil": 0,
  "shake": 1,
- "shootY": 8,
+ "shootY": 6.2,
  "heatColor": "ff3355",
  "cooldownTime": 60,
  "shootSound": "hydra-launch",
@@ -28,9 +28,21 @@
  "shoot": {
   "type": "ShootAlternate",
   "barrels": 2,
-  "spread": 10,
+  "spread": 11.5,
   "shots": 8,
   "shotDelay": 4
+ },
+ "drawer": {
+  "type": "DrawTurret",
+  "parts": [
+   {
+    "type": "RegionPart",
+    "suffix": "-barrel",
+    "progress": "recoil",
+    "moveY": -1.6,
+    "heatColor": "ff3355"
+   }
+  ]
  },
  "consumes": {
   "coolant": {

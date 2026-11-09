@@ -17,8 +17,8 @@
  "reload": 70,
  "rotateSpeed": 6,
  "inaccuracy": 4,
- "recoil": 1.2,
- "shootY": 8,
+ "recoil": 0,
+ "shootY": 8.8,
  "heatColor": "ffb050",
  "cooldownTime": 40,
  "shootSound": "wasp-launch",
@@ -26,9 +26,21 @@
  "shoot": {
   "type": "ShootAlternate",
   "barrels": 2,
-  "spread": 9,
+  "spread": 8.3,
   "shots": 4,
   "shotDelay": 5
+ },
+ "drawer": {
+  "type": "DrawTurret",
+  "parts": [
+   {
+    "type": "RegionPart",
+    "suffix": "-barrel",
+    "progress": "recoil",
+    "moveY": -1.8,
+    "heatColor": "ff6a3a"
+   }
+  ]
  },
  "ammoTypes": {
   "silicon": {

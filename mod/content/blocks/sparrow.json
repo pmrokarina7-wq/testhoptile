@@ -16,8 +16,9 @@
  "reload": 18,
  "rotateSpeed": 12,
  "inaccuracy": 6,
- "recoil": 1,
- "shootY": 7,
+ "recoil": 0,
+ "recoils": 2,
+ "shootY": 8.8,
  "heatColor": "ffb050",
  "cooldownTime": 20,
  "shootSound": "sparrow-shoot",
@@ -25,7 +26,28 @@
  "shoot": {
   "type": "ShootAlternate",
   "barrels": 2,
-  "spread": 6
+  "spread": 6.9
+ },
+ "drawer": {
+  "type": "DrawTurret",
+  "parts": [
+   {
+    "type": "RegionPart",
+    "suffix": "-barrel-l",
+    "progress": "recoil",
+    "recoilIndex": 0,
+    "moveY": -2,
+    "heatColor": "ff9a3a"
+   },
+   {
+    "type": "RegionPart",
+    "suffix": "-barrel-r",
+    "progress": "recoil",
+    "recoilIndex": 1,
+    "moveY": -2,
+    "heatColor": "ff9a3a"
+   }
+  ]
  },
  "ammoTypes": {
   "steel": {

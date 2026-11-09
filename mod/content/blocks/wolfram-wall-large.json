@@ -8,5 +8,6 @@
  "requirements": [
   "tungsten-core/24",
   "steel/8"
- ]
+ ],
+ "variants": 2
 }
