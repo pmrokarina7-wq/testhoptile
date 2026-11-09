@@ -1,0 +1,7 @@
+{
+ "type": "Drill", "category": "production", "size": 2, "health": 260,
+ "research": "mechanical-drill",
+ "requirements": ["copper/20", "lead/10"],
+ "tier": 2, "drillTime": 480, "rotateSpeed": 3, "updateEffectChance": 0.02,
+ "ambientSound": "drill-loop", "ambientSoundVolume": 0.05
+}

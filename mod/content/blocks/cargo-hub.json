@@ -1,0 +1,8 @@
+{
+ "type": "UnitCargoLoader", "category": "units", "size": 3, "health": 900,
+ "research": "vg-engineering-bay",
+ "requirements": ["copper/150", "lead/120", "silicon/90", "steel/80", "aluminum/60"],
+ "unitType": "manifold", "buildTime": 360, "itemCapacity": 200, "polyColor": "ffc94a",
+ "consumes": {"power": 1.5},
+ "ambientSound": "bay-loop", "ambientSoundVolume": 0.05
+}

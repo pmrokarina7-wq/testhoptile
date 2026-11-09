@@ -1,0 +1,15 @@
+{
+ "type": "GenericCrafter", "category": "crafting", "size": 3, "health": 820,
+ "research": "vg-nanite-repairer",
+ "requirements": ["lead/120", "silicon/100", "titanium/80", "cobalt-alloy/60", "magnet/30"],
+ "outputLiquid": {"liquid": "nanite-slurry", "amount": 0.1},
+ "craftTime": 60, "liquidCapacity": 30, "itemCapacity": 10,
+ "consumes": {"items": {"items": ["silicon/1", "spore-pod/1"]}, "liquid": {"liquid": "water", "amount": 0.12}, "power": 1.5},
+ "ambientSound": "vat-loop", "ambientSoundVolume": 0.08,
+ "drawer": {"type": "DrawMulti", "drawers": [
+  {"type": "DrawRegion", "suffix": "-bottom"},
+  {"type": "DrawLiquidTile", "drawLiquid": "nanite-slurry"},
+  {"type": "DrawDefault"},
+  {"type": "DrawGlowRegion", "color": "ff3355", "alpha": 0.85}
+ ]}
+}

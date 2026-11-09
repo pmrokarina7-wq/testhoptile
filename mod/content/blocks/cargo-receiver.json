@@ -1,0 +1,6 @@
+{
+ "type": "UnitCargoUnloadPoint", "category": "units", "size": 2, "health": 420,
+ "research": "vg-cargo-hub",
+ "requirements": ["copper/60", "lead/40", "steel/20"],
+ "itemCapacity": 100
+}

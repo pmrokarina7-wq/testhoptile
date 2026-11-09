@@ -63,6 +63,7 @@ function setup(){
         layoutInterceptLab();
         layoutTempestLab();
         layoutT6Labs();
+        layoutBetaLabs();
         planShots();
         t0 = Time.time;
         L("setup done: " + manifest.blocks.length + " blocks, " + shots.length + " shots");
@@ -336,6 +337,7 @@ function mechUpdate(){
     qiUpdate(t);
     tempestUpdate();
     t6Update(t);
+    betaUpdate(t);
 }
 
 function mechReport(){
@@ -346,6 +348,7 @@ function mechReport(){
     mech.shieldJumps = shield.jumps;
     mech.intercept = qi.stats;
     t6Report();
+    betaReport();
     delete mech.mantis; delete mech.monolith;
     manifest.mech = mech;
     L("mech " + JSON.stringify(mech));
@@ -447,6 +450,54 @@ function t6Report(){
     mech.t6Crafted = made;
 }
 
+// ------------------------------------------------------------------ beta-1 labs (band x 8-110, y 196-232)
+//  prospector drill on ferrolite floor ore; lance drill aimed (+x) at an iridite wall vein
+//  heavy mass driver A -> B (60 tiles), A fed with copper; cargo hub fed with copper -> drone -> receiver set to copper
+//  corrosion: a Lash next to a pinned dummy; T1-T3 generators and the vat/smelter by-products in the showcase
+var b1 = { pros: null, lance: null, drvA: null, drvB: null, hub: null, recv: null, hubUnit: false, lashDummies: [] };
+function layoutBetaLabs(){
+    var fer = blk("vg-ore-ferrolite");
+    for(var ox = 0; ox < 2; ox++) for(var oy = 0; oy < 2; oy++) Vars.world.tile(10 + ox, 200 + oy).setOverlay(fer);
+    b1.pros = place(blk("vg-prospector-drill"), 10, 200, Team.sharded, 0);
+    var wo = blk("vg-wall-ore-iridite");
+    for(var wx = 25; wx < 28; wx++) for(var wy = 198; wy < 205; wy++){ var wt = Vars.world.tile(wx, wy); wt.setBlock(Blocks.stoneWall); wt.setOverlay(wo); }
+    b1.lance = place(blk("vg-lance-drill"), 18, 200, Team.sharded, 0);
+    b1.drvA = place(blk("vg-heavy-driver"), 36, 214, Team.sharded, 0);
+    b1.drvB = place(blk("vg-heavy-driver"), 96, 214, Team.sharded, 0);
+    if(b1.drvA != null && b1.drvB != null) b1.drvA.link = b1.drvB.pos();
+    b1.hub = place(blk("vg-cargo-hub"), 40, 226, Team.sharded, 0);
+    b1.recv = place(blk("vg-cargo-receiver"), 76, 226, Team.sharded, 0);
+    if(b1.recv != null) b1.recv.item = Items.copper;
+    place(blk("vg-lash"), 60, 198, Team.sharded, 1);
+    dummy(62, 206, b1.lashDummies);
+}
+function betaUpdate(t){
+    [b1.drvA, b1.hub].forEach(function(b){
+        if(b == null || !b.isValid()) return;
+        for(var n = 0; n < 20 && b.acceptItem(b, Items.copper); n++) b.handleItem(b, Items.copper);
+    });
+    if(b1.hub != null && b1.hub.isValid() && b1.hub.unit != null) b1.hubUnit = true;
+    var st = statusByName("vg-corrosion"), nc = 0;
+    if(st != null) b1.lashDummies.forEach(function(d){ if(d.u != null && d.u.hasEffect(st)) nc++; });
+    mech.corrosionMax = Math.max(mech.corrosionMax || 0, nc);
+}
+function betaReport(){
+    function items(b){ return (b != null && b.isValid()) ? b.items.total() : -1; }
+    mech.prospector = { item: (b1.pros != null && b1.pros.dominantItem != null) ? String(b1.pros.dominantItem.name) : "none", mined: items(b1.pros) };
+    mech.lance = { mined: items(b1.lance), iridite: (b1.lance != null) ? b1.lance.items.get(Vars.content.item("vg-iridite")) : -1 };
+    mech.massDriver = { linked: b1.drvA != null && b1.drvA.link == b1.drvB.pos(), received: items(b1.drvB) };
+    mech.cargo = { droneBuilt: b1.hubUnit, delivered: items(b1.recv) };
+    var gen = {}, liq = {};
+    Groups.build.each(function(b){
+        var n = String(b.block.name);
+        if(n == "vg-heat-engine" || n == "vg-hydrocarbon-plant") gen[n] = Math.round(b.productionEfficiency * 100) / 100;
+        if(n == "vg-nanite-vat") liq.naniteSlurry = Math.round(b.liquids.get(Vars.content.liquid("vg-nanite-slurry")));
+        if(n == "vg-steel-smelter") liq.moltenIron = Math.round(b.liquids.get(Vars.content.liquid("vg-molten-iron")));
+    });
+    mech.generators = gen;
+    mech.byproducts = liq;
+}
+
 // ------------------------------------------------------------------ screenshots
 function planShots(){
     var top = manifest.showcaseTop;
@@ -465,6 +516,7 @@ function planShots(){
     addShot("28-t6-labs-west", t0 + 300, 70, 300, 1.0);
     addShot("29-t6-labs-east", t0 + 330, 245, 292, 1.0);
     addShot("29b-dome-reactor-close", t0 + 534, 300, 299, 1.6);
+    addShot("40-beta-labs", t0 + 345, 58, 214, 1.4);
     addShot("21-range-overview-b", t0 + 520, rc, 118, 0.9);
     for(var cx = 26, k = 0; cx < manifest.rangeEnd + 20; cx += 52, k++){
         addShot("3" + k + "-range-turrets-" + cx, t0 + 700 + k * 30, cx, 104, 2.6);
@@ -497,7 +549,14 @@ Events.run(Trigger.update, function(){
         if(Time.time - t0 > 200 && ++waveTick >= 240){ waveTick = 0; spawnEnemies(); buildTargets(); }
         if(shotIdx >= shots.length){ finish(); return; }
         var s = shots[shotIdx];
-        Core.camera.position.set(s.cx * 8, s.cy * 8);
+        // the desktop input pulls the camera toward the player's unit every frame, so the player moves with the shot
+        var sx = s.cx * 8, sy = s.cy * 8;
+        Core.camera.position.set(sx, sy);
+        try{
+            Vars.player.set(sx, sy);
+            var pu = Vars.player.unit();
+            if(pu != null && pu.isValid()){ pu.set(sx, sy); pu.vel.setZero(); }
+        }catch(e2){}
         Vars.renderer.setScale(s.scale);
         if(armedFrame < 0 && Time.time >= s.at) armedFrame = Core.graphics.getFrameId() + 2;
     }catch(e){ E("update: " + e); finish(); }
@@ -509,9 +568,12 @@ Events.run(Trigger.postDraw, function(){
     if(polyPending && poly != null && Time.time - t0 > 120){ polyPending = false; poly.addBuild(new BuildPlan(130, 155, 0, Blocks.copperWall)); }
     if(armedFrame < 0 || done || Core.graphics.getFrameId() < armedFrame) return;
     var s = shots[shotIdx];
+    // wait (up to 120 frames) until the camera has actually reached the shot target
+    var camOff = Math.max(Math.abs(Core.camera.position.x - s.cx * 8), Math.abs(Core.camera.position.y - s.cy * 8));
+    if(camOff > 12 && Core.graphics.getFrameId() < armedFrame + 120) return;
     try{
         ScreenUtils.saveScreenshot(OUT.child(s.name + ".png"));
-        manifest.shots.push({ name: s.name, cx: s.cx, cy: s.cy, scale: s.scale, w: Core.graphics.getWidth(), h: Core.graphics.getHeight(), t: Time.time - t0 });
+        manifest.shots.push({ name: s.name, cx: s.cx, cy: s.cy, camX: Math.round(Core.camera.position.x / 8), camY: Math.round(Core.camera.position.y / 8), scale: s.scale, w: Core.graphics.getWidth(), h: Core.graphics.getHeight(), t: Time.time - t0 });
     }catch(e){ E("screenshot " + s.name + ": " + e); }
     shotIdx++;
     armedFrame = -1;

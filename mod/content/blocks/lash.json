@@ -1,97 +1,99 @@
 {
- "type": "PowerTurret",
- "category": "turret",
- "size": 2,
- "health": 1100,
- "armor": 3,
- "research": "lancer",
- "requirements": [
-  "copper/100",
-  "silicon/70",
-  "titanium/50",
-  "aluminum/35"
- ],
- "range": 160,
- "reload": 14,
- "rotateSpeed": 8,
- "recoil": 0,
- "recoils": 2,
- "shake": 0.4,
- "shootY": 8.6,
- "heatColor": "ff3355",
- "cooldownTime": 24,
- "shootSound": "lash-shoot",
- "shoot": {
-  "type": "ShootAlternate",
-  "barrels": 2,
-  "spread": 2.9
- },
- "drawer": {
-  "type": "DrawTurret",
-  "parts": [
-   {
-    "type": "RegionPart",
-    "suffix": "-barrel-l",
-    "progress": "recoil",
-    "recoilIndex": 0,
-    "moveY": -1.2,
-    "heatColor": "ff3355"
-   },
-   {
-    "type": "RegionPart",
-    "suffix": "-barrel-r",
-    "progress": "recoil",
-    "recoilIndex": 1,
-    "moveY": -1.2,
-    "heatColor": "ff3355"
-   }
-  ]
- },
- "consumes": {
-  "power": 3.5
- },
- "shootType": {
-  "type": "LaserBoltBulletType",
-  "speed": 6,
-  "damage": 24,
-  "lifetime": 28,
-  "width": 2.6,
-  "height": 9,
-  "frontColor": "ffd6dd",
-  "backColor": "ff3355",
-  "lightColor": "ff3355",
-  "buildingDamageMultiplier": 0.5,
-  "hitEffect": "hitLaser",
-  "despawnEffect": "hitLaser",
-  "shootEffect": {
-   "type": "MultiEffect",
-   "effects": [
-    {
-     "type": "ParticleEffect",
-     "lifetime": 16,
-     "particles": 8,
-     "cone": 24,
-     "length": 10.0,
-     "baseLength": 2,
-     "line": true,
-     "strokeFrom": 1.8,
-     "strokeTo": 0,
-     "lenFrom": 3.5,
-     "lenTo": 1,
-     "colorFrom": "ffd6dd",
-     "colorTo": "ff3355"
+  "type": "PowerTurret",
+  "category": "turret",
+  "size": 2,
+  "health": 1100,
+  "armor": 3,
+  "research": "lancer",
+  "requirements": [
+    "copper/100",
+    "silicon/70",
+    "titanium/50",
+    "aluminum/35"
+  ],
+  "range": 160,
+  "reload": 14,
+  "rotateSpeed": 8,
+  "recoil": 0,
+  "recoils": 2,
+  "shake": 0.4,
+  "shootY": 8.6,
+  "heatColor": "ff3355",
+  "cooldownTime": 24,
+  "shootSound": "lash-shoot",
+  "shoot": {
+    "type": "ShootAlternate",
+    "barrels": 2,
+    "spread": 2.9
+  },
+  "drawer": {
+    "type": "DrawTurret",
+    "parts": [
+      {
+        "type": "RegionPart",
+        "suffix": "-barrel-l",
+        "progress": "recoil",
+        "recoilIndex": 0,
+        "moveY": -1.2,
+        "heatColor": "ff3355"
+      },
+      {
+        "type": "RegionPart",
+        "suffix": "-barrel-r",
+        "progress": "recoil",
+        "recoilIndex": 1,
+        "moveY": -1.2,
+        "heatColor": "ff3355"
+      }
+    ]
+  },
+  "consumes": {
+    "power": 3.5
+  },
+  "shootType": {
+    "type": "LaserBoltBulletType",
+    "speed": 6,
+    "damage": 24,
+    "lifetime": 28,
+    "width": 2.6,
+    "height": 9,
+    "frontColor": "ffd6dd",
+    "backColor": "ff3355",
+    "lightColor": "ff3355",
+    "buildingDamageMultiplier": 0.5,
+    "hitEffect": "hitLaser",
+    "despawnEffect": "hitLaser",
+    "shootEffect": {
+      "type": "MultiEffect",
+      "effects": [
+        {
+          "type": "ParticleEffect",
+          "lifetime": 16,
+          "particles": 8,
+          "cone": 24,
+          "length": 10.0,
+          "baseLength": 2,
+          "line": true,
+          "strokeFrom": 1.8,
+          "strokeTo": 0,
+          "lenFrom": 3.5,
+          "lenTo": 1,
+          "colorFrom": "ffd6dd",
+          "colorTo": "ff3355"
+        },
+        {
+          "type": "WaveEffect",
+          "lifetime": 12,
+          "sizeFrom": 1,
+          "sizeTo": 5.5,
+          "strokeFrom": 2.5,
+          "strokeTo": 0,
+          "colorFrom": "ffd6dd",
+          "colorTo": "ff3355"
+        }
+      ]
     },
-    {
-     "type": "WaveEffect",
-     "lifetime": 12,
-     "sizeFrom": 1,
-     "sizeTo": 5.5,
-     "strokeFrom": 2.5,
-     "strokeTo": 0,
-     "colorFrom": "ffd6dd",
-     "colorTo": "ff3355"
-    }
-   ]
+    "status": "corrosion",
+    "statusDuration": 180
   }
- }
 }
