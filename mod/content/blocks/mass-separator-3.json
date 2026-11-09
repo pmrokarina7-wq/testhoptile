@@ -2,7 +2,7 @@
  "type": "Separator", "category": "crafting", "size": 4, "health": 2200,
  "research": "vg-superconductor-chamber",
  "requirements": ["copper/600", "lead/500", "silicon/400", "titanium/300", "plastanium/150", "superconductor/150", "iridium/100"],
- "results": ["luminite/3", "null-quartz/3"], "craftTime": 45,
+ "results": ["luminite/3", "null-quartz/3", "seraphite/2", "singularite/1"], "craftTime": 45,
  "consumes": {"items": {"items": ["phase-fabric/1", "surge-alloy/1"]}, "power": 25},
  "ambientSound": "resonator-loop", "ambientSoundVolume": 0.1,
  "drawer": {"type": "DrawMulti", "drawers": [
