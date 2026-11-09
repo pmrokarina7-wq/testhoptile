@@ -1,0 +1,9 @@
+{
+ "type": "ForceProjector", "category": "effect", "size": 9, "health": 24000, "armor": 16,
+ "research": "vg-aegis",
+ "requirements": ["lead/8000", "silicon/6000", "titanium/4000", "plastanium/3000", "phase-fabric/2500", "surge-alloy/1500", "superconductor/2000", "lumen-core/1500", "seraphimium/2000"],
+ "radius": 320, "shieldHealth": 150000, "cooldownNormal": 6, "cooldownLiquid": 3, "cooldownBrokenBase": 2.5,
+ "phaseRadiusBoost": 0, "phaseShieldBoost": 0,
+ "consumes": {"power": 90},
+ "ambientSound": "dome-hum", "ambientSoundVolume": 0.18
+}

@@ -1,0 +1,9 @@
+{
+ "type": "OverdriveProjector", "category": "effect", "size": 7, "health": 8000, "armor": 12,
+ "research": "vg-seraphim-net",
+ "requirements": ["lead/3000", "silicon/3000", "titanium/2000", "plastanium/1500", "phase-fabric/1200", "superconductor/1500", "seraphimium/800"],
+ "range": 480, "speedBoost": 1, "speedBoostPhase": 0, "hasBoost": false, "reload": 60, "useTime": 400,
+ "baseColor": "c890ff", "phaseColor": "c890ff",
+ "consumes": {"power": 50},
+ "ambientSound": "chrono-hum", "ambientSoundVolume": 0.14
+}

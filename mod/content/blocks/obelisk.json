@@ -1,0 +1,19 @@
+{
+ "type": "ContinuousTurret", "category": "turret", "size": 8, "health": 30000, "armor": 20,
+ "research": "vg-bastion",
+ "requirements": ["copper/5000", "lead/4000", "silicon/3500", "titanium/2500", "plastanium/1500", "phase-fabric/800", "surge-alloy/1000", "superconductor/1200", "seraphimium/600"],
+ "targetGround": true, "targetAir": true, "range": 560, "rotateSpeed": 1.6, "aimChangeSpeed": 1.8,
+ "shootY": 28, "shootCone": 15, "shootWarmupSpeed": 0.05, "heatColor": "c890ff",
+ "shootSound": "none", "loopSound": "obelisk-beam", "loopSoundVolume": 1.0,
+ "consumes": {"power": 80},
+ "shootType": {
+  "type": "ContinuousLaserBulletType",
+  "damage": 210, "damageInterval": 5, "length": 560, "width": 9.5,
+  "buildingDamageMultiplier": 0.8, "pierceCap": 4,
+  "hitColor": "c890ff", "lightColor": "c890ff",
+  "colors": ["c890ff55", "c890ffaa", "f0e0ff", "ffffff"],
+  "status": "melting", "statusDuration": 60, "incendChance": 0,
+  "hitEffect": "hitMeltdown"
+ },
+ "drawer": {"type": "DrawTurret"}
+}

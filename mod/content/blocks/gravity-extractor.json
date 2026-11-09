@@ -1,0 +1,9 @@
+{
+ "type": "Drill", "category": "production", "size": 6, "health": 7000, "armor": 10,
+ "research": "vg-laser-extractor",
+ "requirements": ["copper/3000", "lead/2500", "silicon/2000", "titanium/1500", "plastanium/800", "superconductor/800", "quantum-matrix/400", "seraphimium/300"],
+ "tier": 10, "drillTime": 90, "rotateSpeed": 1.2, "itemCapacity": 40, "liquidCapacity": 30,
+ "updateEffect": "pulverizeMedium", "drillEffect": "mineHuge",
+ "consumes": {"power": 40, "liquid": {"liquid": "antimatter", "amount": 0.06}},
+ "ambientSound": "drill-loop", "ambientSoundVolume": 0.16
+}
