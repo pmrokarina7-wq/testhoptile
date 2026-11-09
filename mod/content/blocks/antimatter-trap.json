@@ -1,0 +1,12 @@
+{
+ "type": "GenericCrafter", "category": "crafting", "size": 5, "health": 6000, "armor": 8,
+ "research": "vg-quantum-resonator",
+ "requirements": ["lead/2400", "silicon/2000", "titanium/1600", "metaglass/1200", "plastanium/800", "surge-alloy/500", "superconductor/700", "quantum-matrix/400"],
+ "outputLiquid": {"liquid": "antimatter", "amount": 0.12}, "liquidCapacity": 120, "craftTime": 60,
+ "consumes": {"liquid": {"liquid": "quantum-condensate", "amount": 0.25}, "power": 60},
+ "ambientSound": "antimatter-loop", "ambientSoundVolume": 0.14,
+ "drawer": {"type": "DrawMulti", "drawers": [
+  {"type": "DrawDefault"},
+  {"type": "DrawGlowRegion", "color": "d3a6ff", "alpha": 0.95, "glowScale": 3, "glowIntensity": 0.45}
+ ]}
+}

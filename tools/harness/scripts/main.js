@@ -62,6 +62,7 @@ function setup(){
         layoutShieldLab();
         layoutInterceptLab();
         layoutTempestLab();
+        layoutT6Labs();
         planShots();
         t0 = Time.time;
         L("setup done: " + manifest.blocks.length + " blocks, " + shots.length + " shots");
@@ -171,7 +172,7 @@ function feed(){
         var am = b.block.ammoTypes;
         if(am == null || am.keys == undefined) continue;
         var keys = am.keys().toSeq();
-        if(keys.size == 0) continue;
+        if(keys.size == 0 || b.block.name == "vg-requiem") continue; // range-row Requiem would shell the mechanics lab; it fires in the T6 lab
         var phase = Math.floor((Time.time - t0) / 400);
         var it = keys.get((i + phase) % keys.size);
         for(var n = 0; n < 12 && b.acceptItem(b, it); n++) b.handleItem(b, it);
@@ -187,7 +188,9 @@ function feedOnly(b, name){
 // ------------------------------------------------------------------ mechanics lab (pinned, unkillable enemy dummies)
 var MX = 100;
 var dummies = [], mech = { spottedMax: 0, disarmedMax: 0, empSlowMax: 0, monolithSlowMax: 0, acuWallsBefore: -1, acuWallsAfter: -1, acuKilled: false,
-    haloFired: false, tempestFrozenMax: 0, stasisMax: 0, tempestHeat: -1 };
+    haloFired: false, tempestFrozenMax: 0, stasisMax: 0, tempestHeat: -1,
+    chronoIn: 0, chronoOut: 0, chronoSpeed: 9, requiemHeat: -1, reactorHeat: -1, obeliskFired: false,
+    reactorWarmup: -1, reactorWallsBefore: -1, reactorWallsAfter: -1 };
 var acuWalls = [], acuUnit = null, poly = null, eng = null;
 function wallRing(cx, cy, rad){
     for(var dx = -rad; dx <= rad; dx += 2) for(var dy = -rad; dy <= rad; dy += 2){
@@ -256,9 +259,10 @@ var qi = { b: null, tracked: [], stats: {} };
 function layoutInterceptLab(){
     qi.b = place(blk("vg-quantum-interceptor"), 300, 200, Team.sharded, 0);
 }
-function qiSpawn(kind, block, item, y){
+function qiSpawn(kind, block, item, y, lifeScl){
     var bt = blk(block).ammoTypes.get(Vars.content.item(item));
-    var b = bt.create(owner(), Team.crux, 262 * 8, y * 8, 0);
+    // Requiem shells fly 300 tiles: shorten them so they end inside the map
+    var b = lifeScl ? bt.create(owner(), Team.crux, 262 * 8, y * 8, 0, 1, lifeScl) : bt.create(owner(), Team.crux, 262 * 8, y * 8, 0);
     qi.tracked.push({ b: b, kind: kind, life: b.lifetime });
     if(qi.stats[kind] == null) qi.stats[kind] = { spawned: 0, intercepted: 0 };
     qi.stats[kind].spawned++;
@@ -266,9 +270,10 @@ function qiSpawn(kind, block, item, y){
 function qiUpdate(t){
     if(t > 200 && t < 1000 && Math.floor(t) % 45 == 0 && qi.lastSpawn != Math.floor(t)){
         qi.lastSpawn = Math.floor(t);
-        var k = Math.floor(t / 45) % 2;
+        var k = Math.floor(t / 45) % 3;
         if(k == 0) qiSpawn("redoubt-T2", "vg-redoubt", "vg-charge", 201);
-        else qiSpawn("tempest-T5", "vg-tempest", "vg-iridium", 203);
+        else if(k == 1) qiSpawn("tempest-T5", "vg-tempest", "vg-iridium", 203);
+        else qiSpawn("requiem-T6", "vg-requiem", "vg-singularity-core", 205, 0.15);
     }
     for(var i = qi.tracked.length - 1; i >= 0; i--){
         var e = qi.tracked[i];
@@ -297,6 +302,121 @@ function tempestUpdate(){
     Vars.indexer.eachBlock(Team.crux, 283 * 8, 72 * 8, 12 * 8, function(b){ return true; }, function(b){ if(b.timeScale() < 0.05) fr++; });
     mech.tempestFrozenMax = Math.max(mech.tempestFrozenMax, fr);
     if(tl.b != null && tl.b.isValid()) mech.tempestHeat = Math.max(mech.tempestHeat, tl.b.heatReq);
+}
+
+// ------------------------------------------------------------------ T6 labs (2.5.0-alpha3)
+//  dome:    Requiem quantum (vanilla absorb, 13 500) and singularity (script, x4 = 18 000) shells into a Seraphim Dome
+//  aegis:   singularity shells must fly straight through an Aegis
+//  net:     Seraphim Net vs Tempest (T5) shells, then Requiem singularity (T6) shells
+//  chrono:  pinned dummies inside / outside a Chronofield
+//  requiem: Requiem on singularity cores, heated only by an Annihilation Reactor, reigns 75 tiles away
+//  reactor: a running Annihilation Reactor destroyed inside a ring of enemy walls
+var t6 = { dome: null, domeLast: 0, domeJumps: [], domeShots: 0, domeNext: 0, domeLog: [], aegisNext: 0, netNext: 0, aegis: null, aegisLast: 0, aegisJumps: [],
+    aegisTracked: [], aegisPassed: 0, aegisSpawned: 0, net: null, netTracked: [], netStats: {},
+    chIn: [], chOut: [], rq: null, rqReactor: null, rqSeen: {}, boom: null, boomWalls: [], boomKilled: false };
+function fv(o, n){ var v = o[n]; return (typeof v === "function") ? o[n]() : v; }
+function t6Shell(block, item, x, y, rot, lifeScl){
+    return blk(block).ammoTypes.get(Vars.content.item(item)).create(owner(), Team.crux, x * 8, y * 8, rot, 1, lifeScl);
+}
+function layoutT6Labs(){
+    t6.chrono = place(blk("vg-chronofield"), 8, 214, Team.sharded, 0);
+    dummy(36, 226, t6.chIn); dummy(80, 226, t6.chOut);
+    t6.dome = place(blk("vg-seraphim-dome"), 40, 182, Team.sharded, 0);
+    t6.aegis = place(blk("vg-aegis"), 130, 196, Team.sharded, 0);
+    t6.net = place(blk("vg-seraphim-net"), 200, 170, Team.sharded, 0);
+    t6.rq = place(blk("vg-requiem"), 170, 222, Team.sharded, 1);
+    t6.rqReactor = place(blk("vg-annihilation-reactor"), 171, 215, Team.sharded, 1);
+    dummy(100, 232, null, UnitTypes.reign);
+    t6.boom = place(blk("vg-annihilation-reactor"), 308, 168, Team.sharded, 0);
+    for(var dx = -10; dx <= 10; dx += 2) for(var dy = -10; dy <= 10; dy += 2){
+        if(Math.abs(dx) < 10 && Math.abs(dy) < 10) continue;
+        var t = Vars.world.tile(311 + dx, 171 + dy);
+        if(t != null && t.build == null){ t.setBlock(Blocks.thoriumWall, Team.crux, 0); t6.boomWalls.push(t.build); }
+    }
+}
+function boomHp(){ var s = 0; for(var i = 0; i < t6.boomWalls.length; i++){ var w = t6.boomWalls[i]; s += (w != null && w.isValid()) ? w.health : 0; } return s; }
+function jump(bd, key, list, t){
+    if(bd == null || !bd.isValid()) return;
+    var bu = bd.buildup;
+    if(bu - t6[key] > 300) list.push(Math.round(bu - t6[key]) + "@" + Math.round(t));
+    t6[key] = bu;
+}
+function netTrack(kind, b){
+    t6.netTracked.push({ b: b, kind: kind, life: b.lifetime });
+    if(t6.netStats[kind] == null) t6.netStats[kind] = { spawned: 0, intercepted: 0 };
+    t6.netStats[kind].spawned++;
+}
+function t6Update(t){
+    jump(t6.dome, "domeLast", t6.domeJumps, t);
+    jump(t6.aegis, "aegisLast", t6.aegisJumps, t);
+    // spawns are due-time based: at low client FPS Time.delta skips whole ticks, so modulo tests would miss them
+    // dome: quantum and singularity shells alternate, 3 of each
+    if(t > 240 && t6.domeShots < 6 && t >= t6.domeNext){
+        t6.domeNext = t + 70;
+        var dk = t6.domeShots % 2 == 0 ? "quantum" : "singularity";
+        t6.domeLog.push(dk + "@" + Math.round(t));
+        t6Shell("vg-requiem", dk == "quantum" ? "vg-quantum-matrix" : "vg-singularity-core", 92, 186, 180, 0.1);
+        t6.domeShots++;
+    }
+    // aegis: singularity shells cross it left to right and must come out the other side
+    if(t > 240 && t6.aegisSpawned < 4 && t >= t6.aegisNext){
+        t6.aegisNext = t + 90;
+        t6.aegisTracked.push({ b: t6Shell("vg-requiem", "vg-singularity-core", 98, 199, 0, 0.233), out: false });
+        t6.aegisSpawned++;
+    }
+    // net: T5 Tempest shells first, then T6 singularity shells
+    if(t > 200 && t < 1000 && t >= t6.netNext){
+        t6.netNext = t + 50;
+        if(t < 600) netTrack("tempest-T5", t6Shell("vg-tempest", "vg-iridium", 165, 188, 0, 0.42));
+        else netTrack("requiem-T6", t6Shell("vg-requiem", "vg-singularity-core", 165, 188, 0, 0.27));
+    }
+    for(var i = t6.aegisTracked.length - 1; i >= 0; i--){
+        var a = t6.aegisTracked[i];
+        if(!a.b.isAdded()){ t6.aegisTracked.splice(i, 1); continue; }
+        if(!a.out && a.b.x > 161 * 8){ a.out = true; t6.aegisPassed++; }
+    }
+    for(var j = t6.netTracked.length - 1; j >= 0; j--){
+        var e = t6.netTracked[j];
+        if(e.b.isAdded()) continue;
+        if(e.b.time < e.life - 3) t6.netStats[e.kind].intercepted++;
+        t6.netTracked.splice(j, 1);
+    }
+    var cs = statusByName("vg-chrono-slow"), nIn = 0, nOut = 0;
+    for(var k = 0; k < t6.chIn.length; k++){
+        var u = t6.chIn[k].u;
+        if(cs != null && u.hasEffect(cs)){ nIn++; mech.chronoSpeed = Math.min(mech.chronoSpeed, u.speedMultiplier); }
+    }
+    for(var m = 0; m < t6.chOut.length; m++) if(cs != null && t6.chOut[m].u.hasEffect(cs)) nOut++;
+    mech.chronoIn = Math.max(mech.chronoIn, nIn); mech.chronoOut = Math.max(mech.chronoOut, nOut);
+    feedOnly(t6.rq, "vg-singularity-core");
+    if(t6.rq != null && t6.rq.isValid()) mech.requiemHeat = Math.max(mech.requiemHeat, t6.rq.heatReq);
+    if(t6.rqReactor != null && t6.rqReactor.isValid()) mech.reactorHeat = Math.max(mech.reactorHeat, fv(t6.rqReactor, "heat"));
+    var rqTypes = blk("vg-requiem").ammoTypes;
+    Groups.bullet.each(function(b){
+        if(b.team == Team.sharded && rqTypes.containsValue(b.type, true)) t6.rqSeen[b.id] = true;
+    });
+    Groups.build.each(function(b){
+        if(b.team != Team.sharded || b.block.name != "vg-obelisk") return;
+        if(!mech.obeliskFired && b.bullets.size > 0) mech.obeliskFired = true;
+        // the Obelisk (70 tiles, hits air) kills every flare first: pause it until the Halo has fired too
+        b.enabled = !(mech.obeliskFired && !mech.haloFired);
+    });
+    if(!t6.boomKilled && t > 500 && t6.boom != null && t6.boom.isValid()){
+        mech.reactorWarmup = Math.round(fv(t6.boom, "warmup") * 100) / 100;
+        mech.reactorWallsBefore = boomHp();
+        t6.boom.kill();
+        t6.boomKilled = true;
+    }
+    if(t6.boomKilled && t > 530 && mech.reactorWallsAfter < 0) mech.reactorWallsAfter = boomHp();
+}
+function t6Report(){
+    mech.domeJumps = t6.domeJumps;
+    mech.domeShells = t6.domeLog;
+    mech.aegisSingularityJumps = t6.aegisJumps;
+    mech.aegisPassed = t6.aegisPassed + "/" + t6.aegisSpawned;
+    mech.net = t6.netStats;
+    mech.requiemShells = Object.keys(t6.rqSeen).length;
+    if(mech.chronoSpeed > 1) mech.chronoSpeed = -1;
 }
 
 function mechUpdate(){
@@ -333,6 +453,7 @@ function mechUpdate(){
     shieldUpdate(t);
     qiUpdate(t);
     tempestUpdate();
+    t6Update(t);
 }
 
 function mechReport(){
@@ -342,6 +463,7 @@ function mechReport(){
     mech.engBuilt = String(Vars.world.tile(134, 155).block().name);
     mech.shieldJumps = shield.jumps;
     mech.intercept = qi.stats;
+    t6Report();
     delete mech.mantis; delete mech.monolith;
     manifest.mech = mech;
     L("mech " + JSON.stringify(mech));
@@ -362,6 +484,9 @@ function planShots(){
     addShot("25-mech-area", t0 + 560, MX + 185, 128, 1.6);
     addShot("26-tempest-lab", t0 + 620, 285, 40, 1.0);
     addShot("27-labs-shield-intercept", t0 + 660, 280, 178, 1.0);
+    addShot("28-t6-labs", t0 + 680, 118, 205, 0.75);
+    addShot("29-t6-requiem-lab", t0 + 740, 150, 222, 1.3);
+    addShot("2a-t6-reactor-blast", t0 + 512, 311, 171, 1.2);
     addShot("21-range-overview-b", t0 + 520, rc, 118, 0.9);
     for(var cx = 26, k = 0; cx < manifest.rangeEnd + 20; cx += 52, k++){
         addShot("3" + k + "-range-turrets-" + cx, t0 + 700 + k * 30, cx, 104, 2.6);

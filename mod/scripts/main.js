@@ -354,6 +354,12 @@ function dsInit(){
         var qt = tem.ammoTypes.get(qm);
         if(qt != null) dsT.put(qt, { r: 80, k: 0.02, d: 180, c: DS_GREEN });
     }
+    // Requiem quantum shell (T6): same freeze over its larger blast
+    var rqm = Vars.content.block("vg-requiem");
+    if(rqm != null && qm != null){
+        var rqt = rqm.ammoTypes.get(qm);
+        if(rqt != null) dsT.put(rqt, { r: 112, k: 0.02, d: 180, c: Color.valueOf("c49bff") });
+    }
     dsDone = true;
 }
 try{ Events.on(ContentInitEvent, function(){ try{ dsInit(); }catch(e){ Log.err("[vg] T4 init: " + e); } }); }catch(e){}
@@ -399,7 +405,7 @@ var qiBlock = null, qiImmune = null, qiFail = false, qiTimers = {}, qiTick = 0;
 function qiInit(){
     qiBlock = Vars.content.block("vg-quantum-interceptor");
     qiImmune = new ObjectSet();
-    ["vg-tempest"].forEach(function(n){
+    ["vg-tempest", "vg-requiem"].forEach(function(n){
         var bl = Vars.content.block(n);
         if(bl == null || bl.ammoTypes == null) return;
         bl.ammoTypes.values().toSeq().each(function(bt){
@@ -432,4 +438,160 @@ Events.run(Trigger.update, function(){
             best.remove();
         });
     }catch(e){ qiFail = true; Log.err("[vg] quantum interceptor disabled: " + e); }
+});
+
+// ---------------- Vanguard Arsenal 2.5 - T6 scripts (Seraphim)
+//  * Requiem shells get the ballistic shadow / impact marker / incoming whistle; its quantum shells freeze buildings (dsT above)
+//  * Singularity shells are not absorbable (JSON), so every vanilla shield lets them through. Only the Seraphim Dome stops
+//    them, taking 4x their damage. Antimatter (optional input) triples the Dome's regeneration.
+//  * Seraphim Net: every `reload` ticks destroys the most dangerous enemy shell in range, any tier; each kill burns antimatter.
+//  * Chronofield: while powered, enemy units in range get 'chrono-slow' (-70% speed).
+ARTY["vg-requiem"] = { col: Color.valueOf("c49bff"), whistle: "requiem-whistle", h: 40 };
+var T6_VIOLET = Color.valueOf("c49bff");
+
+var snFx = new Effect(32, 800, function(e){
+    var d = e.data;
+    if(d == null) return;
+    Draw.color(Color.white, e.color, e.fin());
+    Lines.stroke(3.4 * e.fout());
+    Lines.line(e.x, e.y, d.x, d.y);
+    Lines.stroke(1.5 * e.fout());
+    Lines.poly(d.x, d.y, 6, 6 + 24 * e.finpow(), 30 + e.fin() * 60);
+    Lines.circle(d.x, d.y, 3 + 12 * e.finpow());
+    Fill.circle(e.x, e.y, 4.5 * e.fout());
+    Draw.reset();
+});
+var snBlock = null, snAm = null, snFail = false, snTimers = {};
+Events.on(WorldLoadEvent, function(){ snTimers = {}; });
+Events.run(Trigger.update, function(){
+    if(snFail || !Vars.state.isPlaying() || Vars.net.client()) return;
+    try{
+        if(snBlock == null){
+            snBlock = Vars.content.block("vg-seraphim-net");
+            snAm = Vars.content.liquid("vg-antimatter");
+            if(snBlock == null){ snFail = true; return; }
+        }
+        Groups.build.each(function(bd){
+            if(bd.block != snBlock) return;
+            // vanilla point defence only consumes while it has a hittable target, so gate on the potential state
+            var k = bd.pos(), t = (snTimers[k] || 0) + Time.delta * bd.potentialEfficiency;
+            if(t < snBlock.reload){ snTimers[k] = t; return; }
+            var R = snBlock.range, r2 = R * R, best = null, bestS = -1, tm = bd.team, bx = bd.x, by = bd.y;
+            Groups.bullet.intersect(bx - R, by - R, R * 2, R * 2, function(b){
+                // beams and lasers sit on their turret (speed 0): never waste a shot on them
+                if(b.team == tm || b.type.speed < 0.01) return;
+                var dx = b.x - bx, dy = b.y - by, d2 = dx * dx + dy * dy;
+                if(d2 > r2) return;
+                var s = b.damage + b.type.splashDamage - d2 * 0.000001;
+                if(s > bestS){ bestS = s; best = b; }
+            });
+            if(best == null){ snTimers[k] = t; return; }
+            snTimers[k] = 0;
+            snFx.at(bx, by, 0, snBlock.color, new Vec2(best.x, best.y));
+            Fx.absorb.at(best.x, best.y, 0, snBlock.color);
+            snBlock.shootSound.at(bx, by, Mathf.random(0.95, 1.05));
+            if(snAm != null && !bd.cheating()) bd.liquids.remove(snAm, 8);
+            best.remove();
+        });
+    }catch(e){ snFail = true; Log.err("[vg] seraphim net disabled: " + e); }
+});
+
+var chBlock = null, chSt = null, chFail = false, chTick = 0;
+function chInit(){
+    chBlock = Vars.content.block("vg-chronofield");
+    chSt = Vars.content.getByName(ContentType.status, "vg-chrono-slow");
+    return chBlock != null && chSt != null;
+}
+Events.on(ClientLoadEvent, function(){
+    // MendProjector base: drop its meaningless "repair time" line (heal is 0)
+    try{
+        var c = Vars.content.block("vg-chronofield");
+        if(c != null){ c.checkStats(); c.stats.remove(Stat.repairTime); }
+    }catch(e){ Log.err("[vg] chronofield stats: " + e); }
+});
+Events.run(Trigger.update, function(){
+    if(chFail || !Vars.state.isPlaying() || Vars.net.client()) return;
+    if(++chTick < 15) return;
+    chTick = 0;
+    try{
+        if(chBlock == null && !chInit()){ chFail = true; return; }
+        Groups.build.each(function(bd){
+            if(bd.block != chBlock || !(bd.efficiency > 0.01)) return;
+            Units.nearbyEnemies(bd.team, bd.x, bd.y, chBlock.range, function(u){ u.apply(chSt, 30); });
+        });
+    }catch(e){ chFail = true; Log.err("[vg] chronofield disabled: " + e); }
+});
+
+var dmBlock = null, dmSing = null, dmFail = false;
+var dmFx = new Effect(40, function(e){
+    Draw.color(Color.white, e.color, e.fin());
+    Lines.stroke(3 * e.fout());
+    Lines.poly(e.x, e.y, 6, 4 + 30 * e.finpow(), e.fin() * 40);
+    Lines.stroke(1.4 * e.fout());
+    Lines.circle(e.x, e.y, 2 + 46 * e.finpow());
+    Draw.reset();
+});
+function dmInit(){
+    dmBlock = Vars.content.block("vg-seraphim-dome");
+    dmSing = new ObjectSet();
+    var rq = Vars.content.block("vg-requiem"), sc = Vars.content.item("vg-singularity-core");
+    if(rq != null && sc != null){
+        var bt = rq.ammoTypes.get(sc);
+        if(bt != null) dmSing.add(bt);
+    }
+}
+Events.run(Trigger.update, function(){
+    if(dmFail || !Vars.state.isPlaying()) return;
+    try{
+        if(dmBlock == null){ dmInit(); if(dmBlock == null){ dmFail = true; return; } }
+        var server = !Vars.net.client();
+        Groups.build.each(function(bd){
+            if(bd.block != dmBlock) return;
+            var broken = F(bd, "broken");
+            if(server && bd.optionalEfficiency > 0 && bd.buildup > 0){
+                var sc = broken ? dmBlock.cooldownBrokenBase : dmBlock.cooldownNormal;
+                bd.buildup = Math.max(0, bd.buildup - Time.delta * sc * 2 * bd.optionalEfficiency);
+            }
+            if(broken || dmSing.size == 0) return;
+            var r = bd.realRadius();
+            if(r < 1) return;
+            var tm = bd.team, bx = bd.x, by = bd.y;
+            Groups.bullet.intersect(bx - r, by - r, r * 2, r * 2, function(b){
+                if(b.team == tm || !dmSing.contains(b.type)) return;
+                if(!Intersector.isInRegularPolygon(dmBlock.sides, bx, by, r, dmBlock.shieldRotation, b.x, b.y)) return;
+                b.absorb();
+                bd.hit = 1;
+                bd.buildup += b.damage * 4;
+                dmFx.at(b.x, b.y, 0, T6_VIOLET);
+                var sh = Vars.headless ? null : S("shield-hit");
+                if(sh != null) sh.at(b.x, b.y, Mathf.random(0.6, 0.7));
+            });
+        });
+    }catch(e){ dmFail = true; Log.err("[vg] seraphim dome disabled: " + e); }
+});
+
+// chronofield boundary (dashed) and a slow clock ring under every slowed unit
+var t6DrawFail = false;
+Events.run(Trigger.draw, function(){
+    if(t6DrawFail) return;
+    if(chBlock == null && !chInit()){ t6DrawFail = true; return; }
+    try{
+        Draw.z(Layer.effect - 1);
+        Groups.build.each(function(bd){
+            if(bd.block != chBlock || !(bd.efficiency > 0.01)) return;
+            Draw.color(chBlock.baseColor, 0.22 + 0.1 * Mathf.absin(Time.time, 12, 1));
+            Lines.stroke(1.2);
+            Lines.dashCircle(bd.x, bd.y, chBlock.range);
+        });
+        Groups.unit.each(function(u){
+            if(!u.hasEffect(chSt)) return;
+            var r = u.hitSize * 0.7 + 3;
+            Draw.color(chBlock.baseColor, 0.55);
+            Lines.stroke(1);
+            Lines.circle(u.x, u.y, r);
+            Lines.lineAngle(u.x, u.y, 90 - Time.time * 0.6, r * 0.8);
+            Lines.lineAngle(u.x, u.y, 90 - Time.time * 0.05, r * 0.5);
+        });
+        Draw.reset();
+    }catch(e){ t6DrawFail = true; Draw.reset(); Log.err("[vg] T6 visuals disabled: " + e); }
 });
