@@ -227,6 +227,45 @@ try{
     noBuild.effect = Fx.none;
 }catch(e){ noBuild = null; Log.err("[vg] no-build status disabled: " + e); }
 
+// ACU modules (2.5.0-beta2): two of six at a time, bought at an own core (12 tiles) with core items.
+// Each module is a hidden permanent status, so it is synced to clients and saved with the unit for free; the slot
+// count reads getDuration() (exact within a frame, unlike hasEffect which updates with the unit). Periodic effects
+// (shield, repair, missiles) run in the "acuMods" handler below; cannon and build are plain status multipliers.
+var MOD_DEFS = [
+    { id: "cannon", cost: [["graphite", 400], ["vg-steel", 250], ["silicon", 150]], set: { damageMultiplier: 1.35 } },
+    { id: "shield", cost: [["silicon", 350], ["titanium", 200], ["vg-aluminum", 100]] },
+    { id: "build", cost: [["silicon", 300], ["vg-steel", 200], ["lead", 300]], set: { buildSpeedMultiplier: 1.75 } },
+    { id: "repair", cost: [["silicon", 300], ["vg-aluminum", 150], ["graphite", 200]] },
+    { id: "missiles", cost: [["graphite", 300], ["vg-charge", 250], ["titanium", 150]] },
+    { id: "teleport", cost: [["silicon", 500], ["vg-cobalt-alloy", 150], ["titanium", 250]] }
+];
+var MOD = {}, MOD_SLOTS = 2, MOD_FOREVER = 1e9, MOD_CORE_RANGE = 12 * 8, TP_COOLDOWN = 7200;
+var tpCool = null, assembly = null;
+try{
+    MOD_DEFS.forEach(function(d){
+        var st = new StatusEffect("acu-mod-" + d.id);
+        st.permanent = true;
+        st.show = false;
+        st.effect = Fx.none;
+        if(d.set) for(var k in d.set) st[k] = d.set[k];
+        d.st = st;
+        MOD[d.id] = d;
+    });
+    tpCool = new StatusEffect("acu-tp-cooldown");
+    tpCool.color = Color.valueOf("8fb8ff");
+    tpCool.effect = Fx.none;
+    // respawn in the core after an ACU loss: the new ACU stands assembled in the core for the rest of the 30 s ban
+    // (vanilla respawn delay is a final constant, so the wait is a status: synced, saved, shown with a timer)
+    assembly = new StatusEffect("acu-assembly");
+    assembly.speedMultiplier = 0;
+    assembly.reloadMultiplier = 0;
+    assembly.buildSpeedMultiplier = 0;
+    assembly.healthMultiplier = 10;
+    assembly.disarm = true;
+    assembly.color = Color.valueOf("ffd37f");
+    assembly.effect = Fx.none;
+}catch(e){ MOD_DEFS = []; MOD = {}; Log.err("[vg] ACU modules disabled: " + e); }
+
 // engineers start in "assist" mode: they follow and help any construction nearby
 Events.on(ContentInitEvent, function(){
     try{
